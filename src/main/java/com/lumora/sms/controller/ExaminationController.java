@@ -1,14 +1,23 @@
 package com.lumora.sms.controller;
 
 import com.lumora.sms.dto.MarkEntryRequest;
+import com.lumora.sms.entity.ExamResult;
+import com.lumora.sms.entity.Examination;
+import com.lumora.sms.entity.Student;
 import com.lumora.sms.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
-import java.util.Map;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /** Examination setup, subject mark sheets, and result publication. */
 @Controller
@@ -17,6 +26,8 @@ public class ExaminationController {
 
     private final ExaminationService examinations;
     private final AcademicService academics;
+    private final StudentService students;
+    private final DashboardAccessService access;
 
     @GetMapping("/examinations")
     public String examinations(Model model) {
@@ -78,12 +89,103 @@ public class ExaminationController {
         return "redirect:/examinations";
     }
 
+    /**
+     * Results lookup. Nothing is shown until an admission number is entered.
+     * Teachers and the principal may look up any learner; a learner only
+     * themselves, and a guardian only their own children. A number the user may
+     * not see gets the same answer as one that does not exist, so the page cannot
+     * be used to discover who is enrolled.
+     */
     @GetMapping("/results")
-    public String results(Model model) {
-        model.addAttribute("module", "Results analysis");
-        model.addAttribute("examinations", examinations.list());
-        model.addAttribute("performance", examinations.averageBySubject(null));
-        model.addAttribute("grades", examinations.gradeDistribution());
+    public String results(@RequestParam(value = "adm", required = false) String adm,
+                          Authentication authentication,
+                          Model model) {
+        String wanted = adm == null ? "" : adm.trim();
+        model.addAttribute("module", "Results");
+        model.addAttribute("adm", wanted);
+        model.addAttribute("ownOnly", !isStaff(authentication));
+        if (has(authentication, "ROLE_PARENT")) {
+            model.addAttribute("children", access.childrenOf(authentication.getName()));
+        }
+        if (wanted.isEmpty()) {
+            return "modules/results";
+        }
+
+        Optional<Student> learner = students.findByAdmissionNumber(wanted)
+                .filter(s -> maySee(authentication, s.getId()));
+        if (learner.isEmpty()) {
+            model.addAttribute("notFound", true);
+            return "modules/results";
+        }
+
+        List<ExamResult> rows = examinations.publishedResultsFor(learner.get().getId());
+        model.addAttribute("profile", students.profile(learner.get().getId()));
+        model.addAttribute("results", rows);
+        model.addAttribute("summaries", summarise(rows));
         return "modules/results";
     }
+
+    private boolean maySee(Authentication authentication, Long studentId) {
+        if (isStaff(authentication)) {
+            return true;
+        }
+        try {
+            if (has(authentication, "ROLE_STUDENT")) {
+                access.assertStudentOwnsRecord(authentication.getName(), studentId);
+                return true;
+            }
+            if (has(authentication, "ROLE_PARENT")) {
+                access.assertParentOwnsStudent(authentication.getName(), studentId);
+                return true;
+            }
+        } catch (AccessDeniedException refused) {
+            return false;
+        }
+        return false;
+    }
+
+    private boolean isStaff(Authentication authentication) {
+        return has(authentication, "ROLE_PRINCIPAL", "ROLE_TEACHER", "ROLE_CLASS_TEACHER");
+    }
+
+    private static boolean has(Authentication authentication, String... roles) {
+        Set<String> held = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
+        return Arrays.stream(roles).anyMatch(held::contains);
+    }
+
+    /** One line per examination: how many papers, mean percentage and mean points. */
+    static List<ExamSummary> summarise(List<ExamResult> rows) {
+        Map<Long, List<ExamResult>> byExam = new LinkedHashMap<>();
+        for (ExamResult r : rows) {
+            byExam.computeIfAbsent(r.getExamSubject().getExamination().getId(), k -> new ArrayList<>()).add(r);
+        }
+        List<ExamSummary> out = new ArrayList<>();
+        byExam.forEach((examId, results) -> {
+            Examination exam = results.get(0).getExamSubject().getExamination();
+            BigDecimal percentTotal = BigDecimal.ZERO;
+            int pointsTotal = 0;
+            int pointsCount = 0;
+            for (ExamResult r : results) {
+                BigDecimal max = r.getExamSubject().getMaximumMark();
+                if (max != null && max.signum() > 0) {
+                    percentTotal = percentTotal.add(r.getMarks().multiply(BigDecimal.valueOf(100))
+                            .divide(max, 4, RoundingMode.HALF_UP));
+                }
+                if (r.getPoints() != null) {
+                    pointsTotal += r.getPoints();
+                    pointsCount++;
+                }
+            }
+            BigDecimal meanPercent = percentTotal.divide(BigDecimal.valueOf(results.size()), 1, RoundingMode.HALF_UP);
+            BigDecimal meanPoints = pointsCount == 0 ? null
+                    : BigDecimal.valueOf(pointsTotal).divide(BigDecimal.valueOf(pointsCount), 1, RoundingMode.HALF_UP);
+            out.add(new ExamSummary(exam.getName(), exam.getExaminationDate(), results.size(),
+                    meanPercent, pointsTotal, meanPoints));
+        });
+        return out;
+    }
+
+    public record ExamSummary(String examination, LocalDate date, int papers,
+                              BigDecimal meanPercent, int totalPoints, BigDecimal meanPoints) { }
 }

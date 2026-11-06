@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Results analysis')}"></head>
+<head th:replace="~{fragments/layout :: head('Results')}"></head>
 <body>
 
 <div class="app-shell">
     <aside th:replace="~{fragments/layout :: sidebar('results')}"></aside>
 
     <div class="content">
-        <nav th:replace="~{fragments/layout :: topbar('Results analysis')}"></nav>
+        <nav th:replace="~{fragments/layout :: topbar('Results')}"></nav>
 
         <main class="page">
             <div th:replace="~{fragments/layout :: flash}"></div>
@@ -15,71 +15,120 @@
             <div class="page-head hero">
                 <img th:replace="~{fragments/layout :: heroImg('academics')}">
                 <div>
-                    <p class="eyebrow">Academic performance</p>
-                    <h1>Results analysis</h1>
-                    <p class="muted">Whole-school figures drawn from every mark on record.</p>
+                    <p class="eyebrow">Examinations</p>
+                    <h1>Results</h1>
+                    <p class="muted">Enter an admission number to see that learner's published results.</p>
                 </div>
             </div>
 
-            <section class="grid g-2">
-                <div class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <h2>Mean mark by subject</h2>
-                            <p class="sub">Higher bars are stronger subjects</p>
+            <!-- ---------- Lookup ---------- -->
+            <section class="panel">
+                <div class="panel-body">
+                    <form th:action="@{/results}" method="get" class="results-lookup">
+                        <div class="field" style="margin:0;flex:1">
+                            <label for="adm">Admission number</label>
+                            <input type="text" id="adm" name="adm" th:value="${adm}" required
+                                   autocomplete="off" autofocus placeholder="e.g. ADM/2026/001">
+                            <div class="hint" th:if="${ownOnly}">
+                                You can only look up
+                                <span th:text="${children != null} ? 'your own children.' : 'your own results.'">your own results.</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="panel-body tight">
-                        <div th:replace="~{fragments/charts :: bars(${performance}, '')}"></div>
-                    </div>
-                </div>
+                        <button class="btn" type="submit">Show results</button>
+                    </form>
 
-                <div class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <h2>Grade distribution</h2>
-                            <p class="sub">Number of results in each grade band</p>
-                        </div>
-                    </div>
-                    <div class="panel-body tight">
-                        <div th:replace="~{fragments/charts :: bars(${grades}, '')}"></div>
+                    <div class="row" style="margin-top:.8rem" th:if="${children != null and not #lists.isEmpty(children)}">
+                        <span class="faint" style="font-size:.82rem">Your children:</span>
+                        <a class="btn ghost sm" th:each="c : ${children}"
+                           th:href="@{/results(adm=${c.admissionNumber})}"
+                           th:text="${c.firstName} + ' · ' + ${c.admissionNumber}">Child</a>
                     </div>
                 </div>
             </section>
 
-            <section class="panel" style="margin-top:1.05rem">
-                <div class="panel-head">
-                    <div>
-                        <h2>Examinations</h2>
-                        <p class="sub">Open one to see or enter its mark sheets</p>
-                    </div>
-                    <input type="search" data-filter="resultExamTable" placeholder="Filter…" style="max-width:220px">
-                </div>
-
-                <div th:if="${#lists.isEmpty(examinations)}" class="empty">
-                    <span class="big">◔</span>No examinations on record.
-                </div>
-
-                <div class="table-wrap" th:unless="${#lists.isEmpty(examinations)}">
-                    <table class="data" id="resultExamTable">
-                        <thead>
-                        <tr><th>Examination</th><th>Stream</th><th>Date</th><th>Status</th><th></th></tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="e : ${examinations}">
-                            <td th:text="${e.name}">Name</td>
-                            <td th:text="${e.classStream.schoolClass.name} + ' ' + ${e.classStream.name}">Form 1</td>
-                            <td th:text="${#temporals.format(e.examinationDate, 'd MMM yyyy')}">date</td>
-                            <td><span class="badge" th:classappend="${e.published} ? 'good' : 'warn'"
-                                      th:text="${e.published} ? 'Published' : 'Draft'">Draft</span></td>
-                            <td class="right">
-                                <a class="btn ghost sm" th:href="@{/examinations/{id}(id=${e.id})}">Open</a>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+            <!-- ---------- Nothing entered yet ---------- -->
+            <section class="panel" style="margin-top:1.05rem" th:if="${#strings.isEmpty(adm)}">
+                <div class="empty">
+                    <span class="big">⌕</span>Results appear here once you enter an admission number.
                 </div>
             </section>
+
+            <!-- ---------- Unknown, or not theirs to see ---------- -->
+            <div class="alert err" style="margin-top:1.05rem" th:if="${notFound}">
+                <span>!</span>
+                <span>No results were found for <strong th:text="${adm}">ADM</strong>.
+                    Check the admission number and try again.</span>
+            </div>
+
+            <!-- ---------- The learner's results ---------- -->
+            <th:block th:if="${profile != null}">
+                <section class="panel" style="margin-top:1.05rem">
+                    <div class="panel-head">
+                        <div>
+                            <h2 th:text="${profile.student.firstName} + ' ' + ${profile.student.lastName}">Name</h2>
+                            <p class="sub">
+                                <span class="mono" th:text="${profile.student.admissionNumber}">ADM</span> ·
+                                <span th:text="${profile.placement()}">Form 1 North</span> ·
+                                <span th:text="${profile.academicYear}">2026</span>
+                            </p>
+                        </div>
+                        <span class="badge info" th:text="${#lists.size(results)} + ' result(s)'">0</span>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(results)}" class="empty">
+                        <span class="big">✎</span>No results have been published for this learner yet.
+                    </div>
+
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(summaries)}">
+                        <table class="data">
+                            <thead>
+                            <tr><th>Examination</th><th>Date</th><th class="num">Papers</th>
+                                <th class="num">Mean %</th><th class="num">Total points</th>
+                                <th class="num">Mean points</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="s : ${summaries}">
+                                <td th:text="${s.examination}">Exam</td>
+                                <td th:text="${#temporals.format(s.date, 'd MMM yyyy')}">date</td>
+                                <td class="num" th:text="${s.papers}">0</td>
+                                <td class="num" th:text="${s.meanPercent}">0</td>
+                                <td class="num" th:text="${s.totalPoints}">0</td>
+                                <td class="num" th:text="${s.meanPoints} ?: '—'">—</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="panel" style="margin-top:1.05rem" th:unless="${#lists.isEmpty(results)}">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Subject results</h2>
+                            <p class="sub">Only examinations the school has published</p>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data">
+                            <thead>
+                            <tr><th>Examination</th><th>Subject</th><th class="num">Mark</th>
+                                <th class="num">Out of</th><th>Grade</th><th class="num">Points</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="r : ${results}">
+                                <td th:text="${r.examSubject.examination.name}">Exam</td>
+                                <td th:text="${r.examSubject.subject.name}">Subject</td>
+                                <td class="num" th:text="${r.marks}">0</td>
+                                <td class="num" th:text="${r.examSubject.maximumMark}">100</td>
+                                <td><span class="grade"
+                                          th:classappend="${@chartRenderer.gradeClass(r.grade)}"
+                                          th:text="${r.grade} ?: '—'">—</span></td>
+                                <td class="num" th:text="${r.points} ?: '—'">—</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </th:block>
 
         </main>
     </div>

@@ -21,7 +21,7 @@
                        th:text="${#lists.size(items)} + ' records'">0 records</p>
                 </div>
                 <a class="btn" th:href="@{/students/new}"
-                   sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','REGISTRAR')">
+                   sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL')">
                     + Admit student</a>
             </div>
 

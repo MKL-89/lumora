@@ -27,7 +27,7 @@
                     </p>
                 </div>
 
-                <div class="row" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','REGISTRAR')">
+                <div class="row" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL')">
                     <form th:if="${s.active}" th:action="@{/students/{id}/deactivate(id=${s.id})}" method="post"
                           data-confirm="Deactivate this learner? Their records are kept, but they leave the active roll.">
                         <button class="btn danger" type="submit">Deactivate</button>
@@ -51,10 +51,15 @@
                          th:text="'KES ' + ${@chartRenderer.money(profile.outstandingBalance)}">KES 0</div>
                     <div class="foot" th:text="${#lists.size(profile.invoices)} + ' invoice(s)'">0</div>
                 </div>
-                <div class="stat is-good">
+                <div class="stat is-good" th:if="${results != null}">
                     <div class="label">Results on file</div>
-                    <div class="value" th:text="${#lists.size(profile.results)}">0</div>
-                    <div class="foot">Across all examinations</div>
+                    <div class="value" th:text="${#lists.size(results)}">0</div>
+                    <div class="foot" th:text="${resultsPublishedOnly} ? 'Published examinations' : 'Across all examinations'">Across all examinations</div>
+                </div>
+                <div class="stat" th:if="${results == null}">
+                    <div class="label">Results</div>
+                    <div class="value sm">Restricted</div>
+                    <div class="foot">Seen by teachers, the principal and the family</div>
                 </div>
                 <div class="stat">
                     <div class="label">Library loans</div>
@@ -66,19 +71,20 @@
             <section class="grid g-8-4" style="margin-top:1.05rem">
 
                 <div class="stack">
-                    <div class="panel">
+                    <div class="panel" th:if="${results != null}">
                         <div class="panel-head"><h2>Examination results</h2></div>
-                        <div th:if="${#lists.isEmpty(profile.results)}" class="empty">
-                            <span class="big">✎</span>No marks recorded yet.
+                        <div th:if="${#lists.isEmpty(results)}" class="empty">
+                            <span class="big">✎</span>
+                            <span th:text="${resultsPublishedOnly} ? 'No results have been published yet.' : 'No marks recorded yet.'">No marks recorded yet.</span>
                         </div>
-                        <div class="table-wrap" th:unless="${#lists.isEmpty(profile.results)}">
+                        <div class="table-wrap" th:unless="${#lists.isEmpty(results)}">
                             <table class="data">
                                 <thead>
                                 <tr><th>Examination</th><th>Subject</th><th class="num">Mark</th>
                                     <th>Grade</th><th class="num">Points</th><th>Released</th></tr>
                                 </thead>
                                 <tbody>
-                                <tr th:each="r : ${profile.results}">
+                                <tr th:each="r : ${results}">
                                     <td th:text="${r.examSubject.examination.name}">Exam</td>
                                     <td th:text="${r.examSubject.subject.name}">Subject</td>
                                     <td class="num"

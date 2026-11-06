@@ -145,6 +145,17 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public java.util.Optional<Student> findByAdmissionNumber(String admissionNumber) {
+        if (admissionNumber == null || admissionNumber.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        String wanted = admissionNumber.trim();
+        return students.findByAdmissionNumber(wanted)
+                .or(() -> students.findByAdmissionNumber(wanted.toUpperCase(java.util.Locale.ROOT)));
+    }
+
+    @Override
     public List<ChartPoint> genderSplit() {
         return students.countByGender().stream()
                 .map(row -> ChartPoint.of(String.valueOf(row[0]), (Number) row[1]))

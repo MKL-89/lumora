@@ -27,6 +27,9 @@ public interface StudentService {
     /** Resolves the Student record behind a signed-in student account. */
     Student requireByUsername(String username);
 
+    /** The learner with this admission number, ignoring case and surrounding spaces. */
+    java.util.Optional<Student> findByAdmissionNumber(String admissionNumber);
+
     List<ChartPoint> genderSplit();
 
     List<ChartPoint> enrolmentByStream();

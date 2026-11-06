@@ -25,6 +25,7 @@ public class StudentController {
     private final StudentService students;
     private final AcademicService academics;
     private final DashboardAccessService access;
+    private final ExaminationService examinations;
 
     @GetMapping
     public String list(@RequestParam(required = false) String q, Model model) {
@@ -76,7 +77,19 @@ public class StudentController {
                 throw new AccessDeniedException("This account cannot view learner records.");
             }
         }
-        model.addAttribute("profile", students.profile(id));
+        var profile = students.profile(id);
+        model.addAttribute("profile", profile);
+
+        // Results are for teachers and the principal (every mark, drafts included)
+        // and for the learner and their guardians (published examinations only).
+        // Every other role sees the record without results.
+        if (hasAny(authentication, "ROLE_PRINCIPAL", "ROLE_TEACHER", "ROLE_CLASS_TEACHER")) {
+            model.addAttribute("results", profile.results());
+            model.addAttribute("resultsPublishedOnly", false);
+        } else if (hasAny(authentication, "ROLE_STUDENT", "ROLE_PARENT")) {
+            model.addAttribute("results", examinations.publishedResultsFor(id));
+            model.addAttribute("resultsPublishedOnly", true);
+        }
         return "modules/student-view";
     }
 

@@ -62,7 +62,7 @@
                                 <form th:unless="${e.published}" style="display:inline"
                                       th:action="@{/examinations/{id}/publish(id=${e.id})}" method="post"
                                       data-confirm="Publish these results? Marks can no longer be changed afterwards."
-                                      sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL')">
+                                      sec:authorize="hasRole('PRINCIPAL')">
                                     <button class="btn good sm" type="submit">Publish</button>
                                 </form>
                             </td>

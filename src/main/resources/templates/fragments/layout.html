@@ -31,6 +31,9 @@
             <span class="ico">◈</span> Announcements</a>
         <a th:href="@{/notifications}" th:classappend="${active == 'notifications'} ? 'active'">
             <span class="ico">◉</span> Notifications</a>
+        <a th:href="@{/results}" th:classappend="${active == 'results'} ? 'active'"
+           sec:authorize="hasAnyRole('STUDENT','PARENT')">
+            <span class="ico">◔</span> Results</a>
 
         <div sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','REGISTRAR','TEACHER','CLASS_TEACHER')">
             <div class="nav-group">Academics</div>
@@ -38,10 +41,12 @@
                 <span class="ico">◍</span> Students</a>
             <a th:href="@{/attendance}" th:classappend="${active == 'attendance'} ? 'active'">
                 <span class="ico">▤</span> Attendance</a>
-            <a th:href="@{/examinations}" th:classappend="${active == 'examinations'} ? 'active'">
+            <a th:href="@{/examinations}" th:classappend="${active == 'examinations'} ? 'active'"
+               sec:authorize="hasAnyRole('PRINCIPAL','TEACHER','CLASS_TEACHER')">
                 <span class="ico">✎</span> Examinations</a>
-            <a th:href="@{/results}" th:classappend="${active == 'results'} ? 'active'">
-                <span class="ico">◔</span> Results analysis</a>
+            <a th:href="@{/results}" th:classappend="${active == 'results'} ? 'active'"
+               sec:authorize="hasAnyRole('PRINCIPAL','TEACHER','CLASS_TEACHER')">
+                <span class="ico">◔</span> Results</a>
             <a th:href="@{/subjects}" th:classappend="${active == 'subjects'} ? 'active'">
                 <span class="ico">≡</span> Subjects</a>
             <a th:href="@{/classes}" th:classappend="${active == 'classes'} ? 'active'">

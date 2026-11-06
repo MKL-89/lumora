@@ -692,3 +692,8 @@ select { cursor: pointer; }
 /* People photos: keep faces in the band rather than shirts. */
 .page-head.hero .hero-portal { object-position: center 14%; }
 .page-head.hero .hero-academics { object-position: center 30%; }
+
+/* Results lookup */
+.results-lookup { display: flex; gap: .75rem; align-items: flex-start; flex-wrap: wrap; }
+.results-lookup .btn { margin-top: 1.55rem; }
+@media (max-width: 640px) { .results-lookup .btn { margin-top: 0; width: 100%; justify-content: center; } }

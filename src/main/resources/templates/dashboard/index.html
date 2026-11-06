@@ -24,7 +24,7 @@
                     <a class="btn ghost" th:href="@{/attendance}"
                        sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','TEACHER','CLASS_TEACHER')">Take attendance</a>
                     <a class="btn" th:href="@{/students/new}"
-                       sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','REGISTRAR')">
+                       sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL')">
                         + Admit student</a>
                 </div>
             </div>
@@ -72,7 +72,7 @@
                             <p class="sub">Across all published examinations</p>
                         </div>
                         <a class="btn ghost sm" th:href="@{/results}"
-                           sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','REGISTRAR','TEACHER','CLASS_TEACHER')">Full analysis</a>
+                           sec:authorize="hasAnyRole('PRINCIPAL','TEACHER','CLASS_TEACHER')">Look up results</a>
                     </div>
                     <div class="panel-body tight">
                         <div th:replace="~{fragments/charts :: bars(${performanceChart}, '')}"></div>

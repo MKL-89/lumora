@@ -137,25 +137,30 @@ public class SecurityConfig {
                 .requestMatchers("/api/attendance/**")
                     .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL", "DEPUTY_PRINCIPAL", "TEACHER", "CLASS_TEACHER")
                 .requestMatchers("/api/results/**")
-                    .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL", "DEPUTY_PRINCIPAL", "TEACHER", "CLASS_TEACHER")
+                    .hasAnyRole("PRINCIPAL", "TEACHER", "CLASS_TEACHER")
                 .requestMatchers("/api/finance/**")
                     .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "BURSAR")
                 .requestMatchers("/api/library/**")
                     .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "LIBRARIAN")
 
-                // Academic records. Writes are narrower than reads: publishing locks
-                // results, so only school leadership may do it; marks and registers
-                // are entered by teaching staff and leadership.
-                .requestMatchers(HttpMethod.POST, "/examinations/*/publish")
-                    .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL", "DEPUTY_PRINCIPAL")
-                .requestMatchers(HttpMethod.POST, "/examinations/**", "/attendance/**")
+                // Results are seen only by teachers, the principal, and the learner
+                // or their guardians. Mark sheets show every candidate's result, so
+                // they belong to the people who enter marks (teachers) and the
+                // principal, who alone publishes them.
+                .requestMatchers(HttpMethod.POST, "/examinations/*/publish").hasRole("PRINCIPAL")
+                .requestMatchers("/examinations/**").hasAnyRole("PRINCIPAL", "TEACHER", "CLASS_TEACHER")
+
+                // Results lookup by admission number. Learners and guardians may only
+                // open their own records; ExaminationController checks ownership.
+                .requestMatchers("/results/**")
+                    .hasAnyRole("PRINCIPAL", "TEACHER", "CLASS_TEACHER", "STUDENT", "PARENT")
+
+                // Registers are entered by teaching staff and leadership.
+                .requestMatchers(HttpMethod.POST, "/attendance/**")
                     .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL", "DEPUTY_PRINCIPAL", "TEACHER", "CLASS_TEACHER")
 
-                // Mark sheets, results analysis and registers name every learner, so
-                // they are staff-only. Learners and guardians see their own results
-                // through their portal and the ownership-checked student record.
-                .requestMatchers("/examinations/**", "/results/**", "/attendance/**",
-                                 "/subjects/**", "/classes/**", "/timetable/**")
+                // Registers and timetables name every learner, so they are staff-only.
+                .requestMatchers("/attendance/**", "/subjects/**", "/classes/**", "/timetable/**")
                     .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL", "DEPUTY_PRINCIPAL",
                                 "REGISTRAR", "TEACHER", "CLASS_TEACHER")
 
@@ -166,9 +171,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/announcements/**")
                     .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL", "DEPUTY_PRINCIPAL", "CLASS_TEACHER")
 
-                // Module screens follow the same ownership model.
+                // Admitting a learner (the form and the save itself) and deactivating
+                // a record belong to the principal and the school administrators only.
+                .requestMatchers(HttpMethod.POST, "/students", "/students/")
+                    .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL")
                 .requestMatchers("/students/new", "/students/*/deactivate", "/students/*/reactivate")
-                    .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL", "REGISTRAR")
+                    .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL")
 
                 // The learner roll is staff-only. A guardian or learner reaching an
                 // individual record still has to prove ownership in StudentController,
