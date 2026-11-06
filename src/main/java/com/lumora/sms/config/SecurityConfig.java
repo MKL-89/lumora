@@ -45,6 +45,7 @@ public class SecurityConfig {
     private final AuditingLogoutSuccessHandler logoutSuccessHandler;
     private final LumoraAccessDeniedHandler accessDeniedHandler;
     private final DataSource dataSource;
+    private final com.lumora.sms.security.AccountSecurityStateService accountState;
 
     @Value("${app.security.remember-me.key}")
     private String rememberMeKey;
@@ -113,7 +114,7 @@ public class SecurityConfig {
                 .maxSessionsPreventsLogin(false))
             .authorizeHttpRequests(auth -> auth
                 // Public surface.
-                .requestMatchers("/login", "/password-reset/**", "/css/**", "/js/**", "/images/**",
+                .requestMatchers("/login", "/setup", "/password-reset/**", "/css/**", "/js/**", "/images/**",
                                  "/favicon.ico", "/error").permitAll()
                 // School logo and photos: the sign-in page shows them before anyone
                 // is signed in. Changing them is an administrator task (below).
@@ -177,9 +178,10 @@ public class SecurityConfig {
 
                 // Admitting a learner (the form and the save itself) and deactivating
                 // a record belong to the principal and the school administrators only.
-                .requestMatchers(HttpMethod.POST, "/students", "/students/")
+                .requestMatchers(HttpMethod.POST, "/students", "/students/", "/students/import")
                     .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL")
-                .requestMatchers("/students/new", "/students/*/deactivate", "/students/*/reactivate")
+                .requestMatchers("/students/new", "/students/import", "/students/import/**",
+                                 "/students/*/deactivate", "/students/*/reactivate")
                     .hasAnyRole("SUPER_ADMIN", "ADMINISTRATOR", "PRINCIPAL")
 
                 // The learner roll is staff-only. A guardian or learner reaching an
@@ -213,7 +215,10 @@ public class SecurityConfig {
                 .clearAuthentication(true)
                 .deleteCookies("JSESSIONID", "remember-me", "XSRF-TOKEN")
                 .logoutSuccessHandler(logoutSuccessHandler))
-            .exceptionHandling(handling -> handling.accessDeniedHandler(accessDeniedHandler));
+            .exceptionHandling(handling -> handling.accessDeniedHandler(accessDeniedHandler))
+            // A temporary password must be replaced before anything else can be used.
+            .addFilterBefore(new PasswordChangeRequiredFilter(accountState),
+                    org.springframework.security.web.access.intercept.AuthorizationFilter.class);
 
         // Remember-me is deliberately off under per-tab sessions. Its token is a
         // browser-wide cookie, so a brand-new tab would silently be signed in as the

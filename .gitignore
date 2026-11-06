@@ -6,6 +6,7 @@ dist/*.jar
 
 # Local embedded database and uploaded school photos (per installation, not source)
 lumora-data/
+school-data/
 
 # Logs
 *.log

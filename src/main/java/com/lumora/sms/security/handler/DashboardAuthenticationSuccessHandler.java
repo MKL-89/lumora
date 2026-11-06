@@ -44,10 +44,20 @@ public class DashboardAuthenticationSuccessHandler implements AuthenticationSucc
         accountState.recordSuccess(principal.id());
         audit.record(principal.username(), "LOGIN_SUCCESS", req.getRemoteAddr());
 
+        // An account created or reset by an administrator carries a temporary
+        // password. Until its holder chooses their own, PasswordChangeRequiredFilter
+        // keeps them on the change-password page.
+        String destination = destinationFor(auth.getAuthorities());
+        boolean mustChange = accountState.mustChangePassword(principal.id());
+        req.getSession().setAttribute(PasswordChangeRequiredFilter.SESSION_FLAG, mustChange);
+        if (mustChange) {
+            destination = PasswordChangeRequiredFilter.CHANGE_PAGE;
+        }
+
         // Session fixation protection has just issued a new session id. Encoding the
         // redirect carries that new id into this tab's URL, so the tab stays signed
         // in without a shared cookie. Under cookie tracking this is a no-op.
-        res.sendRedirect(res.encodeRedirectURL(req.getContextPath() + destinationFor(auth.getAuthorities())));
+        res.sendRedirect(res.encodeRedirectURL(req.getContextPath() + destination));
     }
 
     /** The dashboard a set of authorities should land on. Also used by the root URL. */

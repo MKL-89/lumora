@@ -212,46 +212,21 @@ public class DemoDataSeeder implements CommandLineRunner {
         scale.setActive(true);
         scale = gradingScales.save(scale);
 
-        Object[][] bands = {
-                {"A", 80, 100, 12, "Excellent"},
-                {"A-", 75, 79, 11, "Very good"},
-                {"B+", 70, 74, 10, "Very good"},
-                {"B", 65, 69, 9, "Good"},
-                {"B-", 60, 64, 8, "Good"},
-                {"C+", 55, 59, 7, "Above average"},
-                {"C", 50, 54, 6, "Average"},
-                {"C-", 45, 49, 5, "Average"},
-                {"D+", 40, 44, 4, "Below average"},
-                {"D", 35, 39, 3, "Weak"},
-                {"D-", 30, 34, 2, "Weak"},
-                {"E", 0, 29, 1, "Needs urgent support"}};
-
-        for (Object[] band : bands) {
+        for (SchoolDefaults.GradeBand band : SchoolDefaults.KCSE_GRADES) {
             GradeDefinition definition = new GradeDefinition();
             definition.setGradingScale(scale);
-            definition.setGrade((String) band[0]);
-            definition.setMinimumMark(BigDecimal.valueOf((Integer) band[1]));
-            definition.setMaximumMark(BigDecimal.valueOf((Integer) band[2]));
-            definition.setPoints((Integer) band[3]);
-            definition.setRemarks((String) band[4]);
+            definition.setGrade(band.grade());
+            definition.setMinimumMark(BigDecimal.valueOf(band.min()));
+            definition.setMaximumMark(BigDecimal.valueOf(band.max()));
+            definition.setPoints(band.points());
+            definition.setRemarks(band.remarks());
             gradeDefinitions.save(definition);
         }
         return scale;
     }
 
     private void createRoles() {
-        Map<UserRoleType, String> descriptions = Map.ofEntries(
-                Map.entry(UserRoleType.SUPER_ADMIN, "Platform governance, school setup and global configuration."),
-                Map.entry(UserRoleType.ADMINISTRATOR, "Day-to-day school administration and operational reports."),
-                Map.entry(UserRoleType.PRINCIPAL, "Whole-school academics, finance summaries and approvals."),
-                Map.entry(UserRoleType.DEPUTY_PRINCIPAL, "Academic operations, examinations and attendance oversight."),
-                Map.entry(UserRoleType.REGISTRAR, "Admissions, student records and class allocation."),
-                Map.entry(UserRoleType.BURSAR, "Fee structures, invoices, receipts and arrears."),
-                Map.entry(UserRoleType.TEACHER, "Assigned subjects: attendance, marks and progress."),
-                Map.entry(UserRoleType.CLASS_TEACHER, "Teacher duties plus a stream roster and guardian contact."),
-                Map.entry(UserRoleType.STUDENT, "Own timetable, attendance, results, fees and loans."),
-                Map.entry(UserRoleType.PARENT, "Linked children only: attendance, results and fee balances."),
-                Map.entry(UserRoleType.LIBRARIAN, "Catalogue, copies, circulation and overdue items."));
+        Map<UserRoleType, String> descriptions = SchoolDefaults.ROLE_DESCRIPTIONS;
 
         for (UserRoleType type : UserRoleType.values()) {
             if (roles.findByName(type).isEmpty()) {

@@ -19,7 +19,23 @@
                     <p class="muted" data-filter-count="userTable"
                        th:text="${#lists.size(items)} + ' accounts'">0 accounts</p>
                 </div>
-                <a class="btn ghost" th:href="@{/roles}">Roles</a>
+                <div style="display:flex;gap:.5rem">
+                    <a class="btn" href="#new">Add an account</a>
+                    <a class="btn ghost" th:href="@{/roles}">Roles</a>
+                </div>
+            </div>
+
+            <!-- Shown once, straight after an account is created or a password reset. -->
+            <div class="alert ok" th:if="${issued}">
+                <span>✓</span>
+                <span>
+                    <span th:text="${issued.newAccount} ? 'Account created for ' : 'Password reset for '">Account created for</span>
+                    <strong class="mono" th:text="${issued.username}">user</strong>.
+                    Their temporary password is
+                    <strong class="mono" style="font-size:1.05rem" th:text="${issued.password}">abcd-2345-efgh</strong>
+                    &mdash; write it down and give it to them now: it will not be shown again. They must
+                    choose their own password the first time they sign in.
+                </span>
             </div>
 
             <div class="panel">
@@ -37,7 +53,7 @@
                     <table class="data" id="userTable">
                         <thead>
                         <tr><th>Username</th><th>Email</th><th>Roles</th>
-                            <th class="num">Failed logins</th><th>Status</th><th>Password set</th></tr>
+                            <th class="num">Failed logins</th><th>Status</th><th>Password set</th><th></th></tr>
                         </thead>
                         <tbody>
                         <tr th:each="u : ${items}">
@@ -56,15 +72,104 @@
                                               and u.lockoutUntil.isAfter(#temporals.createNow())}">Temporarily locked</span>
                                 <span class="badge" th:classappend="${u.enabled} ? 'good' : 'bad'"
                                       th:text="${u.enabled} ? 'Enabled' : 'Disabled'">Enabled</span>
+                                <span class="badge warn" th:if="${u.mustChangePassword}">Temporary password</span>
                             </td>
                             <td class="faint" th:text="${u.passwordChangedAt != null}
                                                        ? ${#temporals.format(u.passwordChangedAt, 'd MMM yyyy')}
-                                                       : 'Never changed'">date</td>
+                                                       : 'Not yet chosen'">date</td>
+                            <td>
+                                <form th:action="@{/users/{id}/reset-password(id=${u.id})}" method="post"
+                                      th:unless="${u.username == #authentication.name}"
+                                      data-confirm="Give this account a new temporary password? Their current password will stop working.">
+                                    <button class="btn ghost sm" type="submit">Reset password</button>
+                                </form>
+                            </td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <div class="panel" id="new">
+                <div class="panel-head"><h2>Add an account</h2></div>
+                <div class="panel-body">
+                    <p class="muted" style="font-size:.86rem;margin-top:0">Lumora makes up a temporary password
+                        and shows it to you once. The person must replace it with their own at first sign-in.</p>
+                    <form th:action="@{/users}" method="post">
+                        <div class="form-row">
+                            <div class="field">
+                                <label for="firstName">First name</label>
+                                <input type="text" id="firstName" name="firstName" required maxlength="80"
+                                       th:value="${draft?.firstName}">
+                            </div>
+                            <div class="field">
+                                <label for="lastName">Last name</label>
+                                <input type="text" id="lastName" name="lastName" required maxlength="80"
+                                       th:value="${draft?.lastName}">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="field">
+                                <label for="username">Username</label>
+                                <input type="text" id="username" name="username" required maxlength="80"
+                                       placeholder="e.g. mary.njeri" th:value="${draft?.username}">
+                                <div class="hint">What they type to sign in. Letters, numbers, dots and dashes.</div>
+                            </div>
+                            <div class="field">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" required maxlength="150"
+                                       th:value="${draft?.email}">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Roles</label>
+                            <div class="check-grid">
+                                <label th:each="r : ${roles}">
+                                    <input type="checkbox" name="roles" th:value="${r}"
+                                           th:checked="${draft != null and draft.roles != null and #sets.contains(draft.roles, r)}">
+                                    <span th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(r, '_', ' ')))}">Teacher</span>
+                                </label>
+                            </div>
+                            <div class="hint">A class teacher should have both <em>Teacher</em> and <em>Class teacher</em>.</div>
+                        </div>
+
+                        <div class="form-row three">
+                            <div class="field">
+                                <label for="employeeNumber">Employee number</label>
+                                <input type="text" id="employeeNumber" name="employeeNumber" maxlength="30"
+                                       placeholder="e.g. T/014" th:value="${draft?.employeeNumber}">
+                                <div class="hint">Teachers only (required).</div>
+                            </div>
+                            <div class="field">
+                                <label for="tscNumber">TSC number</label>
+                                <input type="text" id="tscNumber" name="tscNumber" maxlength="40"
+                                       th:value="${draft?.tscNumber}">
+                                <div class="hint">Teachers only (optional).</div>
+                            </div>
+                            <div class="field">
+                                <label for="phone">Phone</label>
+                                <input type="text" id="phone" name="phone" maxlength="30"
+                                       placeholder="07…" th:value="${draft?.phone}">
+                                <div class="hint">Required for a parent / guardian.</div>
+                            </div>
+                        </div>
+                        <div class="field" style="max-width:320px">
+                            <label for="admissionNumber">Learner's admission number</label>
+                            <input type="text" id="admissionNumber" name="admissionNumber" maxlength="30"
+                                   th:value="${draft?.admissionNumber}">
+                            <div class="hint">Student and parent accounts only: the learner this account belongs
+                                to. A parent with several children can be linked to each one by the school
+                                office.</div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button class="btn" type="submit">Create account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
 
         </main>
     </div>

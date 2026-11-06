@@ -20,9 +20,11 @@
                     <p class="muted" data-filter-count="studentTable"
                        th:text="${#lists.size(items)} + ' records'">0 records</p>
                 </div>
-                <a class="btn" th:href="@{/students/new}"
-                   sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL')">
-                    + Admit student</a>
+                <div style="display:flex;gap:.5rem"
+                     sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL')">
+                    <a class="btn ghost" th:href="@{/students/import}">Import from spreadsheet</a>
+                    <a class="btn" th:href="@{/students/new}">+ Admit student</a>
+                </div>
             </div>
 
             <div class="panel">

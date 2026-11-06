@@ -5,7 +5,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class HomeController {
 
     private final DashboardAuthenticationSuccessHandler destinations;
+    private final com.lumora.sms.service.SetupService setup;
+    private final org.springframework.core.env.Environment environment;
 
     /**
      * Sends each user to the dashboard their role owns.
@@ -36,12 +40,20 @@ public class HomeController {
     }
 
     @GetMapping("/login")
-    public String login(HttpServletRequest request) {
+    public String login(HttpServletRequest request, Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()
                 && !"anonymousUser".equals(String.valueOf(auth.getPrincipal()))) {
             return "redirect:/";
         }
+        // A brand-new database has no accounts, so nobody could sign in: the first
+        // visitor sets the school up and chooses the administrator's password.
+        if (setup.needed()) {
+            return "redirect:/setup";
+        }
+        // The demo accounts and their shared password are listed only while the demo
+        // school is running. A real school's sign-in page never shows them.
+        model.addAttribute("demoMode", environment.acceptsProfiles(Profiles.of("demo")));
 
         // Create the session before the page renders. Under URL-based tracking the
         // container will only rewrite links once a session exists, and this tab's

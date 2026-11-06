@@ -35,4 +35,24 @@ public interface UserService {
      * form of the username ("deputy" becomes "Deputy").
      */
     String displayName(String username);
+
+    /**
+     * Creates an account with a generated temporary password, plus the teacher
+     * record (teaching roles) or the link to a learner (learner and guardian roles).
+     * Only a super administrator may grant the super administrator role.
+     *
+     * @return the temporary password, to be shown once and handed to the holder
+     */
+    String createAccount(@Valid AccountCreateRequest request, boolean actorIsSuperAdmin);
+
+    /**
+     * Replaces an account's password with a new temporary one and lifts any
+     * lockout. The holder must choose their own at the next sign-in.
+     *
+     * @return the temporary password, to be shown once
+     */
+    String resetPassword(@NotNull Long id, boolean actorIsSuperAdmin);
+
+    /** A signed-in person changing their own password; the current one must be given. */
+    void changeOwnPassword(String username, String currentPassword, String newPassword, String confirmation);
 }

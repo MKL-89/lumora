@@ -92,3 +92,18 @@ no MySQL, no XAMPP, no Maven, no internet. The database is built in.
       Wait for "Started LumoraApplication" in the black window first.
       First start is the slowest (~40s); later starts are faster.
 ========================================================================
+
+----------------------------------------------------------------------
+USING LUMORA FOR A REAL SCHOOL (not the demo)
+----------------------------------------------------------------------
+Double-click RUN-LUMORA-SCHOOL.bat instead of RUN-LUMORA.bat.
+
+ - It starts with an EMPTY school: no demo learners, no demo passwords.
+ - The first time, the browser shows "Set up your school". Fill it in and
+   choose the administrator's username and password.
+ - Sign in as the administrator, then use User accounts > Add an account
+   for each member of staff. Each person gets a temporary password and must
+   choose their own when they first sign in.
+ - Bring learners across with Students > Import from spreadsheet.
+ - The school's data is in the "school-data" folder. Back it up often:
+   close Lumora, then copy that folder to a flash disk or cloud drive.

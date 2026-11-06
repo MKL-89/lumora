@@ -698,3 +698,14 @@ select { cursor: pointer; }
 .results-lookup .btn { margin-top: 1.55rem; }
 @media (max-width: 640px) { .results-lookup .btn { margin-top: 0; width: 100%; justify-content: center; } }
 .search svg.ico { display: block; pointer-events: none; }
+
+/* ---- First-time setup and account pages ---------------------------------- */
+.auth-card.wide { max-width: 640px; }
+.setup-step { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+              color: var(--text-faint); margin: 1.4rem 0 .6rem; }
+.check-grid { display: grid; gap: .35rem .9rem; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.check-grid label, .check-line { display: flex; align-items: center; gap: .45rem; font-size: .86rem;
+                                 font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text); }
+.check-grid input, .check-line input { width: auto; }
+.import-errors { max-height: 320px; overflow: auto; }
+.import-errors td:first-child { white-space: nowrap; }

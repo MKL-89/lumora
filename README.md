@@ -117,9 +117,64 @@ deployment** (`PER_TAB_SESSIONS=false`), because a session id in a URL can leak
 through browser history, bookmarks and `Referer` headers. With the flag off the
 application returns to ordinary cookie sessions and remember-me is re-enabled.
 
+### Using Lumora in a real school
+
+The demo school and its shared password are for demonstrations only. A school's
+real copy starts from an **empty database** and never contains the demo learners or
+the demo password, so there is nothing to delete first.
+
+1. Copy the `dist` folder to the school's computer and double-click
+   **`RUN-LUMORA-SCHOOL.bat`**. It keeps the school's data in `dist/school-data`,
+   separate from the demo's `lumora-data`, and turns per-tab sessions off.
+2. Open **http://localhost:8081**. On first start the page **Set up your school**
+   appears: enter the school's name, the year and current term, the stream names
+   (Form 1 to Form 4 are created with them) and the subjects offered, then choose
+   the administrator's username and password. No password is built into the code.
+   Once the administrator exists, this page is closed for good.
+3. Sign in as that administrator and open **User accounts → Add an account** for
+   the principal, teachers, bursar and so on. Lumora generates a **temporary
+   password** and shows it once; each person must choose their own the first time
+   they sign in. Forgotten passwords are handled with **Reset password** on the
+   same page.
+4. Bring the learners across from the old system with **Students → Import from
+   spreadsheet** (below).
+
+**Back up `school-data`** regularly: stop Lumora and copy the folder to a flash
+disk or cloud drive. It holds every learner, mark and payment.
+
+Every user can change their own password with the key button in the top bar.
+Passwords need at least 8 characters with letters and numbers, must not contain
+the username, and common ones (including the demo password) are refused.
+
+### Bringing learners across from another system
+
+**Students → Import from spreadsheet** (principal and administrators) reads a CSV
+file. Export the learner list from the old system to Excel, choose **File → Save As
+→ CSV UTF-8**, and upload it. A template can be downloaded from the same page.
+
+| Column | Notes |
+|---|---|
+| Admission number | Required, unique |
+| First name, middle name, last name | Or a single *Name* column, which is split |
+| Gender | Male / Female, M / F, Boy / Girl |
+| Date of birth | Day first (`14/03/2012`) or `2012-03-14` |
+| Form, Stream | `Form 1`, `F1` or `1`; the stream must exist in Lumora |
+| Admission date, County | Optional |
+| Guardian name, phone, relationship | Optional; brothers and sisters with the same phone number share one guardian |
+
+Headings are matched loosely (`Adm No.`, `Surname`, `Sex`, `D.O.B`, `Class` all
+work) and other columns are ignored. **Every row is checked before anything is
+saved**: if any row has a problem, nothing is imported and the page lists each
+row and what to fix. With *Skip learners already in Lumora* ticked, the same file
+can be uploaded twice safely.
+
+A guardian who later gets a parent account is linked automatically when the
+administrator enters the child's admission number and the same phone number.
+
 ### Demo accounts
 
-Every account uses the password **`Lumora@123`**.
+These exist only in the demo school (the `demo` profile), and the sign-in page
+lists them only there. Every account uses the password **`Lumora@123`**.
 
 | Role | Username | Lands on |
 |---|---|---|
@@ -175,7 +230,7 @@ does nothing on later starts, so restarting never duplicates data.
 - A library of 8 titles, 32 copies, 6 live loans — one deliberately overdue
 - 4 school announcements
 
-To start from an empty database instead, run with `APP_PROFILE=prod`.
+To start from an empty database instead, see *Using Lumora in a real school* above.
 
 ---
 
@@ -240,8 +295,9 @@ service layer, which owns the transaction boundary and the business rules.
 mvn test
 ```
 
-42 tests covering the grading scale, the payment balance rules, library
-circulation, chart geometry, and school photo uploads, results summaries, and teacher identity on mark entry.
+54 tests covering the grading scale, the payment balance rules, library
+circulation, chart geometry, school photo uploads, results summaries, teacher identity on
+mark entry, password rules, first-time setup and the learner spreadsheet import.
 
 ---
 
@@ -252,7 +308,7 @@ Everything is overridable by environment variable.
 | Variable | Default | Purpose |
 |---|---|---|
 | `SERVER_PORT` | `8081` | HTTP port |
-| `APP_PROFILE` | `demo` | Use `prod` for an empty database |
+| `APP_PROFILE` | `demo` | Use `prod` for an empty database (first start shows school setup) |
 | `DB_URL` | `jdbc:mysql://localhost:3306/lumora_db` | Datasource |
 | `DB_USERNAME` / `DB_PASSWORD` | `lumora_user` / `lumora_dev_pass` | Credentials |
 | `REMEMBER_ME_KEY` | placeholder | **Replace before any real deployment** |

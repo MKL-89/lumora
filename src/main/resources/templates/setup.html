@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Set up your school')}"></head>
+<body>
+
+<div class="auth-page">
+
+    <aside class="auth-aside" th:classappend="${@schoolMedia.available('login')} ? 'has-photo'">
+        <img class="auth-photo" alt="" th:if="${@schoolMedia.available('login')}"
+             th:src="@{/media/login(v=${@schoolMedia.version('login')})}">
+        <span class="eyebrow" style="color:#9d97f5">First-time setup</span>
+        <h1>Welcome to Lumora.</h1>
+        <p>This copy of Lumora is new and empty. Tell it about your school and choose the
+           administrator's password. It takes about two minutes and is done only once.</p>
+
+        <ul class="auth-points">
+            <li><span class="tick">✓</span> No built-in passwords: you choose the administrator's</li>
+            <li><span class="tick">✓</span> Form 1 to Form 4 are created with your stream names</li>
+            <li><span class="tick">✓</span> The KCSE twelve-point grading scale is ready to use</li>
+            <li><span class="tick">✓</span> Afterwards, bring your learners across from a spreadsheet</li>
+        </ul>
+    </aside>
+
+    <main class="auth-main">
+        <div class="auth-card wide">
+            <span class="brand" style="color:var(--text)">
+                <span th:replace="~{fragments/layout :: brandMark}"></span>
+                <span>Lumora<small style="color:var(--text-faint)">School Management</small></span>
+            </span>
+
+            <h1 style="margin-top:1.4rem">Set up your school</h1>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <form th:action="@{/setup}" method="post">
+
+                <div class="setup-step">1 · The school</div>
+                <div class="field">
+                    <label for="schoolName">School name</label>
+                    <input type="text" id="schoolName" name="schoolName" th:value="${form.schoolName}" required maxlength="150"
+                           placeholder="e.g. Kianjokoma Secondary School" autofocus>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="schoolCode">School code <span class="faint">(optional)</span></label>
+                        <input type="text" id="schoolCode" name="schoolCode" th:value="${form.schoolCode}" maxlength="30"
+                               placeholder="KNEC code, e.g. 12345678">
+                    </div>
+                    <div class="field">
+                        <label for="county">County <span class="faint">(optional)</span></label>
+                        <input type="text" id="county" name="county" th:value="${form.county}" maxlength="80" placeholder="e.g. Embu">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="phone">Phone <span class="faint">(optional)</span></label>
+                        <input type="text" id="phone" name="phone" th:value="${form.phone}" maxlength="30" placeholder="+254 7…">
+                    </div>
+                    <div class="field">
+                        <label for="schoolEmail">School email <span class="faint">(optional)</span></label>
+                        <input type="email" id="schoolEmail" name="schoolEmail" th:value="${form.schoolEmail}" maxlength="150">
+                    </div>
+                </div>
+
+                <div class="setup-step">2 · Calendar and classes</div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="year">Academic year</label>
+                        <input type="number" id="year" name="year" th:value="${form.year}" min="2020" max="2100" required>
+                    </div>
+                    <div class="field">
+                        <label for="currentTerm">Current term</label>
+                        <select id="currentTerm" name="currentTerm">
+                            <option value="1" th:selected="${form.currentTerm == 1}">Term 1</option>
+                            <option value="2" th:selected="${form.currentTerm == 2}">Term 2</option>
+                            <option value="3" th:selected="${form.currentTerm == 3}">Term 3</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="streams">Stream names</label>
+                    <input type="text" id="streams" name="streams" th:value="${form.streams}" required maxlength="200"
+                           placeholder="e.g. East, West">
+                    <div class="hint">Separate them with commas. Every form, Form 1 to Form 4, gets these
+                        streams. If the school has a single stream per form, type one name such as
+                        <em>A</em>.</div>
+                </div>
+
+                <div class="field">
+                    <label>Subjects offered</label>
+                    <div class="check-grid">
+                        <label th:each="s : ${subjectOptions}">
+                            <input type="checkbox" name="subjects" th:value="${s.code}"
+                                   th:checked="${form.subjects != null and #lists.contains(form.subjects, s.code)}">
+                            <span th:text="${s.name}">English</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setup-step">3 · The administrator</div>
+                <p class="muted" style="font-size:.85rem;margin-top:-.2rem">This person signs in first and
+                    then creates accounts for the principal, teachers and other staff.</p>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="adminUsername">Username</label>
+                        <input type="text" id="adminUsername" name="adminUsername" th:value="${form.adminUsername}" required maxlength="80"
+                               autocomplete="username" placeholder="e.g. jkamau">
+                    </div>
+                    <div class="field">
+                        <label for="adminEmail">Email</label>
+                        <input type="email" id="adminEmail" name="adminEmail" th:value="${form.adminEmail}" required maxlength="150"
+                               autocomplete="email">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="adminPassword">Password</label>
+                        <input type="password" id="adminPassword" name="adminPassword" required minlength="8"
+                               maxlength="100" autocomplete="new-password">
+                        <div class="hint">At least 8 characters, with letters and numbers.</div>
+                    </div>
+                    <div class="field">
+                        <label for="adminPasswordConfirm">Type it again</label>
+                        <input type="password" id="adminPasswordConfirm" name="adminPasswordConfirm" required
+                               minlength="8" maxlength="100" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <button class="btn" type="submit" style="width:100%;justify-content:center;margin-top:.6rem">
+                    Create the school</button>
+            </form>
+        </div>
+    </main>
+
+</div>
+
+</body>
+</html>

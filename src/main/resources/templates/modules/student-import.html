@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Import learners')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('students')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Import learners')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Admissions</p>
+                    <h1>Import learners</h1>
+                    <p class="muted">Bring learners across from your previous system, or any spreadsheet, in one go.</p>
+                </div>
+                <a class="btn ghost" th:href="@{/students}">Back to learners</a>
+            </div>
+
+            <!-- Outcome of an upload -->
+            <div class="alert ok" th:if="${result != null and result.ok()}">
+                <span>✓</span>
+                <span>
+                    <strong th:text="${result.imported} + (${result.imported == 1} ? ' learner' : ' learners') + ' imported'
+                            + (${result.guardiansAdded > 0} ? ', with ' + ${result.guardiansAdded}
+                               + (${result.guardiansAdded == 1} ? ' new guardian' : ' new guardians') : '')
+                            + '.'">96 learners imported, with 40 new guardians.</strong>
+                    <span th:if="${result.skipped > 0}"
+                          th:text="${result.skipped} + ' already in Lumora were left as they were.'">3 skipped.</span>
+                    <a th:href="@{/students}">See the learner list</a>
+                </span>
+            </div>
+
+            <div class="panel" th:if="${result != null and not result.ok()}">
+                <div class="panel-head">
+                    <h2>Nothing was imported yet</h2>
+                    <span class="badge bad" th:text="${#lists.size(result.problems)} + ' problems'">3 problems</span>
+                </div>
+                <div class="panel-body">
+                    <p class="muted" style="margin-top:0">To keep the learner list complete and tidy, Lumora saves the
+                        file only when every row is correct. Fix these rows in your spreadsheet, save it as CSV again,
+                        and upload it once more.</p>
+                    <div class="table-wrap import-errors">
+                        <table class="data">
+                            <thead><tr><th>Row</th><th>Admission no.</th><th>What to fix</th></tr></thead>
+                            <tbody>
+                            <tr th:each="p : ${result.problems}">
+                                <td class="mono" th:text="${p.row}">2</td>
+                                <td class="mono" th:text="${p.admissionNumber}">ADM/001</td>
+                                <td th:text="${p.message}">Problem</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid g-8-4">
+                <div class="panel">
+                    <div class="panel-head"><h2>Upload the spreadsheet</h2></div>
+                    <div class="panel-body">
+                        <ol style="margin:0 0 1.1rem;padding-left:1.2rem;line-height:1.8;font-size:.9rem">
+                            <li>Export the learner list from the old system to Excel, or
+                                <a th:href="@{/students/import/template.csv}">download Lumora's template</a>.</li>
+                            <li>Make sure the columns match the list on the right. Extra columns are ignored.</li>
+                            <li>In Excel choose <strong>File → Save As → CSV UTF-8 (Comma delimited)</strong>.</li>
+                            <li>Upload the .csv file here.</li>
+                        </ol>
+
+                        <form th:action="@{/students/import}" method="post" enctype="multipart/form-data">
+                            <div class="field">
+                                <label for="file">Spreadsheet (.csv)</label>
+                                <input type="file" id="file" name="file" accept=".csv,text/csv" required>
+                            </div>
+                            <div class="field">
+                                <label class="check-line">
+                                    <input type="checkbox" name="skipExisting" value="true"
+                                           th:checked="${skipExisting == null or skipExisting}">
+                                    Skip learners whose admission number is already in Lumora
+                                </label>
+                                <div class="hint">Leave this ticked if you are uploading the same file again, or
+                                    adding a second file after the first.</div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn" type="submit">Check and import</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><h2>Columns</h2></div>
+                    <div class="panel-body" style="font-size:.86rem">
+                        <p style="margin-top:0"><strong>Needed</strong></p>
+                        <ul style="margin:0 0 .9rem;padding-left:1.1rem;line-height:1.7">
+                            <li>Admission number</li>
+                            <li>First name and last name (middle name optional), <em>or</em> one Name column</li>
+                            <li>Gender: Male / Female (or M / F)</li>
+                            <li>Date of birth: 14/03/2012 or 2012-03-14</li>
+                            <li>Form: Form 1 to Form 4 (or 1 to 4)</li>
+                            <li>Stream: one of
+                                <span th:each="s, it : ${streams}"
+                                      th:if="${s.schoolClass.level == 1}"
+                                      th:text="${s.name} + (${it.last} ? '' : ', ')">East, </span>
+                            </li>
+                        </ul>
+                        <p><strong>Optional</strong></p>
+                        <ul style="margin:0;padding-left:1.1rem;line-height:1.7">
+                            <li>Admission date, County</li>
+                            <li>Guardian name and phone (both, or neither)</li>
+                            <li>Guardian relationship: Mother, Father, Guardian…</li>
+                        </ul>
+                        <p class="faint" style="margin-bottom:0">Brothers and sisters with the same guardian phone
+                            number are linked to one guardian.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

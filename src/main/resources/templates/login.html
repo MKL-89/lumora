@@ -39,6 +39,10 @@
             <div class="alert ok" th:if="${param.logout}">
                 <span>✓</span><span>You have been signed out.</span>
             </div>
+            <div class="alert ok" th:if="${param.setup}">
+                <span>✓</span><span>The school is set up. Sign in with the administrator
+                      username and password you just chose.</span>
+            </div>
             <div class="alert info" th:if="${param.expired}">
                 <span>ⓘ</span><span>Your session timed out. Please sign in again.</span>
             </div>
@@ -66,7 +70,7 @@
                 <button class="btn" type="submit" style="width:100%;justify-content:center">Sign in</button>
             </form>
 
-            <div class="cred-hint">
+            <div class="cred-hint" th:if="${demoMode}">
                 <strong>Demo accounts</strong> — password <code>Lumora@123</code> for all of them.
                 <table>
                     <tr><td>Super admin</td><td><code>superadmin</code></td></tr>
