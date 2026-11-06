@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('dashboard')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Dashboard')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head hero">
+                <img th:replace="~{fragments/layout :: heroImg('banner')}">
+                <div>
+                    <p class="eyebrow" th:text="${dashboardRole}">ROLE</p>
+                    <h1>Welcome back, <span th:text="${username}">user</span></h1>
+                    <p class="muted">Lumora Secondary School · where the school stands today.</p>
+                </div>
+                <div class="row">
+                    <a class="btn ghost" th:href="@{/attendance}"
+                       sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','TEACHER','CLASS_TEACHER')">Take attendance</a>
+                    <a class="btn" th:href="@{/students/new}"
+                       sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','REGISTRAR')">
+                        + Admit student</a>
+                </div>
+            </div>
+
+            <!-- ---------- Headline figures ---------- -->
+            <section class="grid g-4">
+                <div class="stat">
+                    <div class="label">Active learners</div>
+                    <div class="value" th:text="${summary.students}">0</div>
+                    <div class="foot">Enrolled across all streams</div>
+                </div>
+
+                <div class="stat is-good">
+                    <div class="label">Attendance today</div>
+                    <div class="value"
+                         th:text="${summary.attendanceRate >= 0} ? ${summary.attendanceRate} + '%' : '—'">—</div>
+                    <div class="foot"
+                         th:text="${summary.attendanceRate >= 0}
+                                  ? 'Present of those registered'
+                                  : 'No register taken yet today'">Present</div>
+                </div>
+
+                <div class="stat is-warn">
+                    <div class="label">Fees outstanding</div>
+                    <div class="value sm"
+                         th:text="'KES ' + ${@chartRenderer.compact(summary.totalOutstanding)}">KES 0</div>
+                    <div class="foot"
+                         th:text="${summary.collectionRate()} + '% of KES '
+                                  + ${@chartRenderer.compact(summary.totalBilled)} + ' collected'">collected</div>
+                </div>
+
+                <div class="stat" th:classappend="${summary.overdueLoans > 0} ? 'is-bad'">
+                    <div class="label">Books on loan</div>
+                    <div class="value" th:text="${summary.activeLoans}">0</div>
+                    <div class="foot" th:text="${summary.overdueLoans} + ' overdue'">0 overdue</div>
+                </div>
+            </section>
+
+            <!-- ---------- Charts ---------- -->
+            <section class="grid g-7-5" style="margin-top:1.05rem">
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Mean mark by subject</h2>
+                            <p class="sub">Across all published examinations</p>
+                        </div>
+                        <a class="btn ghost sm" th:href="@{/results}"
+                           sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','REGISTRAR','TEACHER','CLASS_TEACHER')">Full analysis</a>
+                    </div>
+                    <div class="panel-body tight">
+                        <div th:replace="~{fragments/charts :: bars(${performanceChart}, '')}"></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Attendance trend</h2>
+                            <p class="sub">Present rate, last 14 days</p>
+                        </div>
+                    </div>
+                    <div class="panel-body tight">
+                        <div th:replace="~{fragments/charts :: trend(${attendanceChart}, '%')}"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid g-7-5" style="margin-top:1.05rem">
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Enrolment by stream</h2>
+                            <p class="sub">Active placements this academic year</p>
+                        </div>
+                    </div>
+                    <div class="panel-body tight">
+                        <div th:replace="~{fragments/charts :: bars(${enrolmentChart}, '')}"></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Collections by method</h2>
+                            <p class="sub">All receipts, KES</p>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div th:replace="~{fragments/charts :: breakdown(${collectionChart}, 'KES ')}"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- Notices, attention, audit ---------- -->
+            <section class="grid g-3" style="margin-top:1.05rem">
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <h2>Current notices</h2>
+                        <a class="faint" th:href="@{/announcements}">All</a>
+                    </div>
+                    <div th:if="${#lists.isEmpty(announcements)}" class="empty">
+                        <span class="big">◈</span>Nothing published.
+                    </div>
+                    <div class="notice" th:each="a, stat : ${announcements}" th:if="${stat.index &lt; 4}">
+                        <h3 th:text="${a.title}">Title</h3>
+                        <p th:text="${#strings.abbreviate(a.content, 110)}">Body</p>
+                        <span class="faint" th:text="${#temporals.format(a.publishedAt, 'd MMM yyyy')}">date</span>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <h2>Needs attention</h2>
+                    </div>
+                    <div class="panel-body stack">
+                        <div class="spread">
+                            <span>Unpublished examinations</span>
+                            <span class="badge"
+                                  th:classappend="${summary.unpublishedExaminations > 0} ? 'warn' : 'good'"
+                                  th:text="${summary.unpublishedExaminations}">0</span>
+                        </div>
+                        <div class="spread">
+                            <span>Overdue library loans</span>
+                            <span class="badge" th:classappend="${summary.overdueLoans > 0} ? 'bad' : 'good'"
+                                  th:text="${summary.overdueLoans}">0</span>
+                        </div>
+                        <div class="spread">
+                            <span>Invoices raised</span>
+                            <span class="badge info" th:text="${summary.invoices}">0</span>
+                        </div>
+                        <div class="spread">
+                            <span>Teaching staff</span>
+                            <span class="badge info" th:text="${summary.teachers}">0</span>
+                        </div>
+
+                        <hr class="divider">
+                        <div>
+                            <div class="spread" style="margin-bottom:.3rem">
+                                <span class="faint">Fee collection</span>
+                                <strong th:text="${summary.collectionRate()} + '%'">0%</strong>
+                            </div>
+                            <div class="meter"
+                                 th:classappend="${@chartRenderer.meterClass(summary.collectionRate())}">
+                                <span th:style="'width:' + ${summary.collectionRate()} + '%'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <h2>Security activity</h2>
+                        <span class="faint">Audit trail</span>
+                    </div>
+                    <div th:if="${#lists.isEmpty(activity)}" class="empty">
+                        <span class="big">◉</span>Nothing logged yet.
+                    </div>
+                    <div class="feed">
+                        <div class="feed-item" th:each="log : ${activity}">
+                            <span class="dot"
+                                  th:classappend="${log.action == 'LOGIN_SUCCESS'} ? 'ok'
+                                                  : (${log.action == 'LOGIN_FAILURE' or log.action == 'ACCESS_DENIED'} ? 'no' : '')"></span>
+                            <span>
+                                <strong th:text="${#strings.replace(log.action, '_', ' ')}">ACTION</strong><br>
+                                <span class="faint"
+                                      th:text="${log.user != null} ? ${log.user.username} : 'unknown account'">user</span>
+                            </span>
+                            <span class="when" th:text="${#temporals.format(log.occurredAt, 'HH:mm')}">00:00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- Overdue detail ---------- -->
+            <section class="panel" style="margin-top:1.05rem" th:if="${not #lists.isEmpty(overdueLoans)}">
+                <div class="panel-head">
+                    <div>
+                        <h2>Overdue library loans</h2>
+                        <p class="sub">Copies past their due date and still out</p>
+                    </div>
+                    <a class="btn ghost sm" th:href="@{/library}"
+                       sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','LIBRARIAN','TEACHER','CLASS_TEACHER')">Circulation desk</a>
+                </div>
+                <div class="table-wrap">
+                    <table class="data">
+                        <thead>
+                        <tr><th>Accession</th><th>Title</th><th>Borrower</th><th>Due</th><th class="num">Days late</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="loan : ${overdueLoans}">
+                            <td class="mono" th:text="${loan.bookCopy.accessionNumber}">LUM/LIB/0001</td>
+                            <td th:text="${loan.bookCopy.book.title}">Title</td>
+                            <td th:text="${loan.borrower.username}">user</td>
+                            <td th:text="${#temporals.format(loan.dueDate, 'd MMM yyyy')}">date</td>
+                            <td class="num">
+                                <span class="badge bad"
+                                      th:text="${T(java.time.temporal.ChronoUnit).DAYS.between(loan.dueDate, T(java.time.LocalDate).now())}">0</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Circulation')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('library')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Circulation')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head hero">
+                <img th:replace="~{fragments/layout :: heroImg('library')}">
+                <div>
+                    <p class="eyebrow">Library</p>
+                    <h1>Circulation desk</h1>
+                    <p class="muted">Issuing a copy marks it as out; returning it puts it straight
+                       back on the shelf, in one transaction.</p>
+                </div>
+                <a class="btn ghost" th:href="@{/books}">Catalogue</a>
+            </div>
+
+            <div class="alert err" th:if="${not #lists.isEmpty(overdue)}">
+                <span>!</span>
+                <span th:text="${#lists.size(overdue)} + ' loan(s) are overdue and still out.'">overdue</span>
+            </div>
+
+            <section class="grid g-8-4">
+
+                <!-- ---------- Issue ---------- -->
+                <div class="panel" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','LIBRARIAN')">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Issue a copy</h2>
+                            <p class="sub" th:text="${#lists.size(availableCopies)} + ' copies available'">0</p>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div th:if="${#lists.isEmpty(availableCopies)}" class="empty">
+                            <span class="big">▣</span>Every copy is currently out on loan.
+                        </div>
+
+                        <form th:unless="${#lists.isEmpty(availableCopies)}"
+                              th:action="@{/library/issue}" method="post">
+                            <div class="field">
+                                <label for="bookCopyId">Copy</label>
+                                <select id="bookCopyId" name="bookCopyId" required>
+                                    <option value="">Select an available copy…</option>
+                                    <option th:each="c : ${availableCopies}" th:value="${c.id}"
+                                            th:text="${c.accessionNumber} + ' — ' + ${c.book.title}">Copy</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="field">
+                                    <label for="borrowerUserId">Borrower</label>
+                                    <select id="borrowerUserId" name="borrowerUserId" required>
+                                        <option value="">Select a borrower…</option>
+                                        <option th:each="u : ${borrowers}" th:value="${u.id}"
+                                                th:text="${u.username}">user</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="dueDate">Due date</label>
+                                    <input type="date" id="dueDate" name="dueDate" required
+                                           th:value="${defaultDue}" th:min="${today}">
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="btn" type="submit">Issue copy</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><h2>At a glance</h2></div>
+                    <div class="panel-body stack">
+                        <div class="spread">
+                            <span>Copies available</span>
+                            <span class="badge good" th:text="${#lists.size(availableCopies)}">0</span>
+                        </div>
+                        <div class="spread">
+                            <span>Loans on record</span>
+                            <span class="badge info" th:text="${#lists.size(loans)}">0</span>
+                        </div>
+                        <div class="spread">
+                            <span>Overdue</span>
+                            <span class="badge" th:classappend="${#lists.isEmpty(overdue)} ? 'good' : 'bad'"
+                                  th:text="${#lists.size(overdue)}">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- Loans ---------- -->
+            <section class="panel" style="margin-top:1.05rem">
+                <div class="panel-head">
+                    <div>
+                        <h2>Loans</h2>
+                        <p class="sub" data-filter-count="loanTable"
+                           th:text="${#lists.size(loans)} + ' records'">0 records</p>
+                    </div>
+                    <input type="search" data-filter="loanTable"
+                           placeholder="Filter by title, borrower or accession…" style="max-width:300px">
+                </div>
+
+                <div th:if="${#lists.isEmpty(loans)}" class="empty">
+                    <span class="big">▣</span>Nothing has been issued yet.
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(loans)}">
+                    <table class="data" id="loanTable">
+                        <thead>
+                        <tr><th>Accession</th><th>Title</th><th>Borrower</th><th>Borrowed</th>
+                            <th>Due</th><th>Returned</th><th>Status</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="l : ${loans}"
+                            th:with="late=${l.status.name() == 'BORROWED' and l.dueDate.isBefore(today)}">
+                            <td class="mono" th:text="${l.bookCopy.accessionNumber}">LUM</td>
+                            <td th:text="${l.bookCopy.book.title}">Title</td>
+                            <td th:text="${l.borrower.username}">user</td>
+                            <td th:text="${#temporals.format(l.borrowedOn, 'd MMM yyyy')}">date</td>
+                            <td th:text="${#temporals.format(l.dueDate, 'd MMM yyyy')}">date</td>
+                            <td th:text="${l.returnedOn != null}
+                                         ? ${#temporals.format(l.returnedOn, 'd MMM yyyy')} : '—'">—</td>
+                            <td>
+                                <span class="badge bad" th:if="${late}">OVERDUE</span>
+                                <span class="badge" th:unless="${late}"
+                                      th:classappend="${l.status.name() == 'RETURNED'} ? 'good' : 'info'"
+                                      th:text="${l.status}">STATUS</span>
+                            </td>
+                            <td class="right">
+                                <form th:if="${l.status.name() == 'BORROWED' or l.status.name() == 'OVERDUE'}"
+                                      th:action="@{/library/return/{id}(id=${l.id})}" method="post"
+                                      sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','LIBRARIAN')">
+                                    <button class="btn ghost sm" type="submit">Return</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

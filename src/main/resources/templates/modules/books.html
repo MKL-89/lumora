@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Catalogue')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('books')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Catalogue')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head hero">
+                <img th:replace="~{fragments/layout :: heroImg('library')}">
+                <div>
+                    <p class="eyebrow">Library</p>
+                    <h1>Book catalogue</h1>
+                    <p class="muted" data-filter-count="bookTable"
+                       th:text="${#lists.size(books)} + ' titles'">0 titles</p>
+                </div>
+                <a class="btn ghost" th:href="@{/library}"
+                   sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','LIBRARIAN','TEACHER','CLASS_TEACHER')">Circulation desk</a>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Titles</h2>
+                        <p class="sub" th:text="${#lists.size(categories)} + ' categories'">0</p>
+                    </div>
+                    <input type="search" data-filter="bookTable"
+                           placeholder="Filter by title, author or ISBN…" style="max-width:300px">
+                </div>
+
+                <div th:if="${#lists.isEmpty(books)}" class="empty">
+                    <span class="big">▢</span>The catalogue is empty.
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(books)}">
+                    <table class="data" id="bookTable">
+                        <thead>
+                        <tr><th>Title</th><th>Author</th><th>Category</th>
+                            <th>ISBN</th><th>Publisher</th><th class="num">Year</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="b : ${books}">
+                            <td th:text="${b.title}">Title</td>
+                            <td th:text="${b.author}">Author</td>
+                            <td><span class="badge info" th:text="${b.category.name}">Category</span></td>
+                            <td class="mono faint" th:text="${b.isbn} ?: '—'">—</td>
+                            <td th:text="${b.publisher} ?: '—'">—</td>
+                            <td class="num" th:text="${b.publicationYear} ?: '—'">—</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

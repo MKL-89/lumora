@@ -1,0 +1,7 @@
+package com.lumora.sms.service.impl;
+import com.lumora.sms.dto.MpesaTransactionRequest; import com.lumora.sms.entity.*; import com.lumora.sms.exception.*; import com.lumora.sms.repository.*; import com.lumora.sms.service.MpesaService; import jakarta.validation.Valid; import lombok.RequiredArgsConstructor; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
+/** Prevents duplicate M-Pesa transaction references before persistence. */
+@Service @org.springframework.validation.annotation.Validated @RequiredArgsConstructor @Transactional(readOnly=true)
+public class MpesaServiceImpl implements MpesaService { private final MpesaTransactionRepository transactions; private final PaymentRepository payments;
+ @Transactional public MpesaTransaction record(@Valid MpesaTransactionRequest r){if(transactions.existsByTransactionCode(r.transactionCode()))throw new DuplicateResourceException("M-Pesa transaction reference",r.transactionCode());Payment payment=payments.findById(r.paymentId()).orElseThrow(()->new ResourceNotFoundException("Payment",r.paymentId()));if(payment.getAmount().compareTo(r.amount())!=0)throw new BusinessRuleViolationException("The M-Pesa amount must equal its payment amount.");MpesaTransaction tx=new MpesaTransaction();tx.setPayment(payment);tx.setTransactionCode(r.transactionCode());tx.setPayerPhone(r.payerPhone());tx.setAmount(r.amount());tx.setTransactionTime(r.transactionTime());tx.setAccountReference(r.accountReference());return transactions.save(tx);}
+}

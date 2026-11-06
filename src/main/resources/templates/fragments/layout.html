@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!--
+  Shared chrome for every signed-in screen. Pages pull in the pieces they need
+  with th:replace, which keeps navigation and branding defined in one place.
+-->
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle} + ' · Lumora'">Lumora</title>
+    <link rel="stylesheet" th:href="@{/css/lumora.css}">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235b52e0'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='17' font-weight='bold' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E">
+    <script th:src="@{/js/lumora.js}" defer></script>
+</head>
+
+<body>
+
+<!-- ==================== Sidebar ==================== -->
+<aside class="sidebar" id="sidebar" th:fragment="sidebar(active)">
+    <a class="brand" th:href="@{/home}">
+        <span th:replace="~{fragments/layout :: brandMark}"></span>
+        <span>Lumora<small>School Management</small></span>
+    </a>
+
+    <nav>
+        <div class="nav-group">Overview</div>
+        <a th:href="@{/home}" th:classappend="${active == 'dashboard'} ? 'active'">
+            <span class="ico">▦</span> Dashboard</a>
+        <a th:href="@{/announcements}" th:classappend="${active == 'announcements'} ? 'active'">
+            <span class="ico">◈</span> Announcements</a>
+        <a th:href="@{/notifications}" th:classappend="${active == 'notifications'} ? 'active'">
+            <span class="ico">◉</span> Notifications</a>
+
+        <div sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','REGISTRAR','TEACHER','CLASS_TEACHER')">
+            <div class="nav-group">Academics</div>
+            <a th:href="@{/students}" th:classappend="${active == 'students'} ? 'active'">
+                <span class="ico">◍</span> Students</a>
+            <a th:href="@{/attendance}" th:classappend="${active == 'attendance'} ? 'active'">
+                <span class="ico">▤</span> Attendance</a>
+            <a th:href="@{/examinations}" th:classappend="${active == 'examinations'} ? 'active'">
+                <span class="ico">✎</span> Examinations</a>
+            <a th:href="@{/results}" th:classappend="${active == 'results'} ? 'active'">
+                <span class="ico">◔</span> Results analysis</a>
+            <a th:href="@{/subjects}" th:classappend="${active == 'subjects'} ? 'active'">
+                <span class="ico">≡</span> Subjects</a>
+            <a th:href="@{/classes}" th:classappend="${active == 'classes'} ? 'active'">
+                <span class="ico">⌗</span> Classes</a>
+            <a th:href="@{/timetable}" th:classappend="${active == 'timetable'} ? 'active'">
+                <span class="ico">◫</span> Teaching allocation</a>
+        </div>
+
+        <div sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','BURSAR')">
+            <div class="nav-group">Finance</div>
+            <a th:href="@{/fees}" th:classappend="${active == 'fees'} ? 'active'">
+                <span class="ico">◇</span> Fees and invoices</a>
+            <a th:href="@{/payments}" th:classappend="${active == 'payments'} ? 'active'">
+                <span class="ico">◆</span> Payments</a>
+        </div>
+
+        <div class="nav-group">Library</div>
+        <a th:href="@{/library}" th:classappend="${active == 'library'} ? 'active'"
+           sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','LIBRARIAN','TEACHER','CLASS_TEACHER')">
+            <span class="ico">▣</span> Circulation</a>
+        <a th:href="@{/books}" th:classappend="${active == 'books'} ? 'active'">
+            <span class="ico">▢</span> Catalogue</a>
+
+        <!-- Staff registers are visible to school leadership; account and role
+             administration stays with the administrator roles that own it, so no
+             link here ever leads to a 403. -->
+        <div sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL')">
+            <div class="nav-group">Administration</div>
+            <a th:href="@{/teachers}" th:classappend="${active == 'teachers'} ? 'active'">
+                <span class="ico">◐</span> Teachers</a>
+            <a th:href="@{/parents}" th:classappend="${active == 'parents'} ? 'active'">
+                <span class="ico">◑</span> Parents</a>
+        </div>
+        <div sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR')">
+            <a th:href="@{/users}" th:classappend="${active == 'users'} ? 'active'">
+                <span class="ico">◎</span> User accounts</a>
+            <a th:href="@{/roles}" th:classappend="${active == 'roles'} ? 'active'">
+                <span class="ico">⚿</span> Roles</a>
+            <a th:href="@{/settings/branding}" th:classappend="${active == 'branding'} ? 'active'">
+                <span class="ico">▨</span> School photos</a>
+        </div>
+    </nav>
+
+    <div class="sidebar-foot">
+        Lumora SMS v1.0<br>
+        <span th:text="'Signed in as ' + ${#authentication.name}">user</span>
+    </div>
+</aside>
+
+<!-- ==================== Topbar ==================== -->
+<nav class="topbar" th:fragment="topbar(pageTitle)">
+    <button class="icon-btn sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle navigation">☰</button>
+
+    <div class="search">
+        <span class="ico">⌕</span>
+        <form th:action="@{/students}" method="get">
+            <input type="search" name="q" placeholder="Search learners by name or admission number">
+        </form>
+    </div>
+
+    <div class="nav-tools">
+        <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle theme">☽</button>
+
+        <div class="who">
+            <span class="avatar" th:text="${#strings.toUpperCase(#strings.substring(#authentication.name, 0, 2))}">AB</span>
+            <span>
+                <span class="name" th:text="${#authentication.name}">user</span>
+                <span class="role" sec:authentication="principal.authorities">roles</span>
+            </span>
+        </div>
+
+        <form th:action="@{/logout}" method="post">
+            <button class="icon-btn" type="submit" title="Sign out" aria-label="Sign out">⏻</button>
+        </form>
+    </div>
+</nav>
+
+<!-- ==================== School pictures ==================== -->
+<!-- The school's uploaded logo, or the Lumora letter mark until it adds one. -->
+<span th:fragment="brandMark" class="brand-mark"
+      th:classappend="${@schoolMedia.custom('logo')} ? 'has-logo'"><img
+      th:if="${@schoolMedia.custom('logo')}" alt=""
+      th:src="@{/media/logo(v=${@schoolMedia.version('logo')})}"><th:block
+      th:unless="${@schoolMedia.custom('logo')}">L</th:block></span>
+
+<!-- Photo behind a ".page-head.hero" header. Decorative, so it has empty alt text. -->
+<img th:fragment="heroImg(slot)" class="hero-img" alt="" loading="lazy"
+     th:classappend="'hero-' + ${slot}"
+     th:if="${@schoolMedia.available(slot)}"
+     th:src="@{/media/{s}(s=${slot},v=${@schoolMedia.version(slot)})}">
+
+<!-- ==================== Flash messages ==================== -->
+<div th:fragment="flash">
+    <div class="alert ok" data-autohide th:if="${message}">
+        <span>✓</span><span th:text="${message}">Saved.</span>
+    </div>
+    <div class="alert err" th:if="${problem}">
+        <span>!</span><span th:text="${problem}">Problem.</span>
+    </div>
+    <div class="alert err" th:if="${errors}">
+        <span>!</span>
+        <span>
+            Please correct the following:
+            <ul>
+                <li th:each="e : ${errors}" th:text="${e.defaultMessage}">Problem</li>
+            </ul>
+        </span>
+    </div>
+</div>
+
+</body>
+</html>

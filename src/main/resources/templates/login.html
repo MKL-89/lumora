@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sign in')}"></head>
+<body>
+
+<div class="auth-page">
+
+    <aside class="auth-aside" th:classappend="${@schoolMedia.available('login')} ? 'has-photo'">
+        <img class="auth-photo" alt="" th:if="${@schoolMedia.available('login')}"
+             th:src="@{/media/login(v=${@schoolMedia.version('login')})}">
+        <span class="eyebrow" style="color:#9d97f5">Lumora School Management System</span>
+        <h1>Run the whole school from one place.</h1>
+        <p>Admissions, attendance, examinations, fees and the library — with every
+           action scoped to the role that owns it.</p>
+
+        <ul class="auth-points">
+            <li><span class="tick">✓</span> Eleven role-specific dashboards, from Principal to Parent</li>
+            <li><span class="tick">✓</span> Automatic KCSE grading against your grading scale</li>
+            <li><span class="tick">✓</span> Fee invoicing, receipting and M-Pesa reconciliation in KES</li>
+            <li><span class="tick">✓</span> Every sign-in, refusal and password change written to an audit trail</li>
+        </ul>
+    </aside>
+
+    <main class="auth-main">
+        <div class="auth-card">
+            <a class="brand" style="color:var(--text)" th:href="@{/login}">
+                <span th:replace="~{fragments/layout :: brandMark}"></span>
+                <span>Lumora<small style="color:var(--text-faint)">School Management</small></span>
+            </a>
+
+            <h1 style="margin-top:1.4rem">Sign in</h1>
+            <p class="muted" style="font-size:.89rem">Use the account issued by your school administrator.</p>
+
+            <div class="alert err" th:if="${param.error}">
+                <span>!</span>
+                <span>That username and password did not match. After five failed
+                      attempts the account locks for fifteen minutes.</span>
+            </div>
+            <div class="alert ok" th:if="${param.logout}">
+                <span>✓</span><span>You have been signed out.</span>
+            </div>
+            <div class="alert info" th:if="${param.expired}">
+                <span>ⓘ</span><span>Your session timed out. Please sign in again.</span>
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" autocomplete="username"
+                           required autofocus placeholder="e.g. principal">
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password"
+                           autocomplete="current-password" required placeholder="••••••••••">
+                </div>
+
+                <div class="field">
+                    <label style="display:flex;align-items:center;gap:.45rem;font-weight:500;text-transform:none;font-size:.85rem">
+                        <input type="checkbox" name="remember-me" style="width:auto">
+                        Keep me signed in on this device
+                    </label>
+                </div>
+
+                <button class="btn" type="submit" style="width:100%;justify-content:center">Sign in</button>
+            </form>
+
+            <div class="cred-hint">
+                <strong>Demo accounts</strong> — password <code>Lumora@123</code> for all of them.
+                <table>
+                    <tr><td>Super admin</td><td><code>superadmin</code></td></tr>
+                    <tr><td>Administrator</td><td><code>admin</code></td></tr>
+                    <tr><td>Principal</td><td><code>principal</code></td></tr>
+                    <tr><td>Bursar</td><td><code>bursar</code></td></tr>
+                    <tr><td>Class teacher</td><td><code>grace.wanjiru</code></td></tr>
+                    <tr><td>Librarian</td><td><code>librarian</code></td></tr>
+                    <tr><td>Student</td><td><code>student</code></td></tr>
+                    <tr><td>Parent</td><td><code>parent</code></td></tr>
+                </table>
+            </div>
+        </div>
+    </main>
+
+</div>
+
+</body>
+</html>

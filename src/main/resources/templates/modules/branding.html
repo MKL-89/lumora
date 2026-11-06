@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('School photos')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('branding')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('School photos')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Administration</p>
+                    <h1>School photos</h1>
+                    <p class="muted">Make Lumora look like your school. Upload your own logo and
+                       photographs; until you do, the built-in pictures are used. JPEG, PNG or WebP,
+                       up to 5 MB each.</p>
+                </div>
+            </div>
+
+            <section class="media-grid">
+                <article class="panel media-card" th:each="s : ${slots}" th:id="${s.key}">
+                    <div class="media-preview" th:classappend="${s.key == 'logo'} ? 'logo'">
+                        <img th:if="${@schoolMedia.available(s.key)}" alt=""
+                             th:alt="${s.label}"
+                             th:src="@{/media/{k}(k=${s.key},v=${@schoolMedia.version(s.key)})}">
+                        <span class="empty" th:unless="${@schoolMedia.available(s.key)}">
+                            No logo yet.<br>The letter mark is shown until you upload one.</span>
+                    </div>
+
+                    <div class="media-body">
+                        <h3>
+                            <span th:text="${s.label}">Slot</span>
+                            <span class="badge good" th:if="${@schoolMedia.custom(s.key)}">Your photo</span>
+                            <span class="badge" th:unless="${@schoolMedia.custom(s.key)}"
+                                  th:text="${s.hasDefault} ? 'Built-in' : 'Not set'">Built-in</span>
+                        </h3>
+                        <p th:text="${s.hint}">Where it appears.</p>
+
+                        <form th:action="@{/settings/branding/{k}(k=${s.key})}" method="post"
+                              enctype="multipart/form-data" class="media-actions">
+                            <input type="file" name="file" required
+                                   accept="image/jpeg,image/png,image/webp"
+                                   th:attr="aria-label='Choose a picture for ' + ${s.label}">
+                            <button class="btn sm" type="submit">Upload</button>
+                        </form>
+
+                        <form th:if="${@schoolMedia.custom(s.key)}"
+                              th:action="@{/settings/branding/{k}/reset(k=${s.key})}" method="post">
+                            <button class="btn ghost sm" type="submit"
+                                    th:text="${s.hasDefault} ? 'Go back to the built-in photo' : 'Remove logo'">Reset</button>
+                        </form>
+                    </div>
+                </article>
+            </section>
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

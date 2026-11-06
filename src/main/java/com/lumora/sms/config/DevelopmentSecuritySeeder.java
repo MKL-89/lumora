@@ -1,0 +1,7 @@
+package com.lumora.sms.config;
+import com.lumora.sms.entity.*; import com.lumora.sms.enums.UserRoleType; import com.lumora.sms.repository.*; import lombok.RequiredArgsConstructor; import org.springframework.boot.CommandLineRunner; import org.springframework.context.annotation.Profile; import org.springframework.security.crypto.password.PasswordEncoder; import org.springframework.stereotype.Component; import org.springframework.transaction.annotation.Transactional; import java.time.LocalDateTime; import java.util.*;
+/** Creates predictable encrypted accounts only when the explicit development profile is active. */
+@Component @Profile("dev") @RequiredArgsConstructor
+public class DevelopmentSecuritySeeder implements CommandLineRunner { private final RoleRepository roles; private final UserRepository users; private final PasswordEncoder encoder;
+ @Override @Transactional public void run(String... args){for(UserRoleType type:UserRoleType.values()){roles.findByName(type).orElseGet(()->{Role r=new Role();r.setName(type);r.setDescription(type.name());return roles.save(r);});} for(UserRoleType type:UserRoleType.values()){String username="test_"+type.name().toLowerCase();if(!users.existsByUsername(username)){User user=new User();user.setUsername(username);user.setEmail(username+"@lumora.test");user.setPasswordHash(encoder.encode("Lumora@123"));user.setPasswordChangedAt(LocalDateTime.now());user.setRoles(Set.of(roles.findByName(type).orElseThrow()));users.save(user);}} }
+}

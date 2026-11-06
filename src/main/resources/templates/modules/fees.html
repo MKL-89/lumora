@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Fees and invoices')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('fees')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Fees and invoices')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Finance</p>
+                    <h1>Fees and invoices</h1>
+                    <p class="muted">All amounts in Kenyan shillings.</p>
+                </div>
+                <a class="btn" th:href="@{/payments}">Record a payment</a>
+            </div>
+
+            <section class="grid g-2">
+                <!-- ---------- Invoice run ---------- -->
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Bill a term</h2>
+                            <p class="sub">Invoices every actively enrolled learner</p>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <form th:action="@{/fees/generate}" method="post" class="inline-form"
+                              data-confirm="Generate invoices for every actively enrolled learner in this term?">
+                            <div class="field" style="min-width:220px">
+                                <label for="termId">Term</label>
+                                <select id="termId" name="termId" required>
+                                    <option th:each="t : ${terms}" th:value="${t.id}"
+                                            th:selected="${activeTerm != null and t.id == activeTerm.id}"
+                                            th:text="${t.academicYear.name} + ' · ' + ${t.name}
+                                                     + (${t.active} ? ' (current)' : '')">Term</option>
+                                </select>
+                            </div>
+                            <button class="btn" type="submit">Generate invoices</button>
+                        </form>
+                        <p class="faint" style="margin:.7rem 0 0">
+                            The amount comes from the fee structure attached to each learner's class.
+                            Anyone already invoiced for that term is skipped, so the run is safe to repeat.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ---------- Arrears ---------- -->
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Outstanding by class</h2>
+                            <p class="sub">Unpaid balance, KES</p>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div th:replace="~{fragments/charts :: breakdown(${outstandingChart}, 'KES ')}"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- Fee structures ---------- -->
+            <section class="panel" style="margin-top:1.05rem">
+                <div class="panel-head">
+                    <div>
+                        <h2>Fee structures</h2>
+                        <p class="sub">What each class is charged per term</p>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(structures)}" class="empty">
+                    <span class="big">◇</span>No fee structures configured.
+                </div>
+                <div class="table-wrap" th:unless="${#lists.isEmpty(structures)}">
+                    <table class="data">
+                        <thead><tr><th>Class</th><th>Term</th><th>Currency</th><th>Status</th></tr></thead>
+                        <tbody>
+                        <tr th:each="s : ${structures}">
+                            <td th:text="${s.schoolClass.name}">Form 1</td>
+                            <td th:text="${s.term.academicYear.name} + ' · ' + ${s.term.name}">Term</td>
+                            <td class="mono" th:text="${s.currencyCode}">KES</td>
+                            <td><span class="badge" th:classappend="${s.active} ? 'good' : ''"
+                                      th:text="${s.active} ? 'Active' : 'Inactive'">Active</span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ---------- Invoices ---------- -->
+            <section class="panel" style="margin-top:1.05rem">
+                <div class="panel-head">
+                    <div>
+                        <h2>Student invoices</h2>
+                        <p class="sub" data-filter-count="invoiceTable"
+                           th:text="${#lists.size(invoices)} + ' records'">0 records</p>
+                    </div>
+                    <input type="search" data-filter="invoiceTable"
+                           placeholder="Filter by learner or invoice…" style="max-width:280px">
+                </div>
+
+                <div th:if="${#lists.isEmpty(invoices)}" class="empty">
+                    <span class="big">◇</span>No invoices raised yet. Use "Bill a term" above.
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(invoices)}">
+                    <table class="data" id="invoiceTable">
+                        <thead>
+                        <tr><th>Invoice</th><th>Learner</th><th>Term</th>
+                            <th class="num">Total</th><th class="num">Balance</th>
+                            <th>Due</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="i : ${invoices}">
+                            <td class="mono" th:text="${i.invoiceNumber}">INV</td>
+                            <td>
+                                <a th:href="@{/students/{id}(id=${i.student.id})}"
+                                   th:text="${i.student.firstName} + ' ' + ${i.student.lastName}">Name</a>
+                                <span class="faint mono" th:text="' · ' + ${i.student.admissionNumber}">ADM</span>
+                            </td>
+                            <td th:text="${i.term.name}">Term</td>
+                            <td class="num" th:text="${@chartRenderer.money(i.totalAmount)}">0</td>
+                            <td class="num" th:text="${@chartRenderer.money(i.balanceAmount)}">0</td>
+                            <td th:text="${#temporals.format(i.dueDate, 'd MMM yyyy')}">date</td>
+                            <td><span class="badge"
+                                      th:classappend="${i.status.name() == 'PAID'} ? 'good'
+                                                      : (${i.status.name() == 'PARTIALLY_PAID'} ? 'warn' : 'bad')"
+                                      th:text="${i.status}">STATUS</span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

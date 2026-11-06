@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Examinations')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('examinations')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Examinations')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head hero">
+                <img th:replace="~{fragments/layout :: heroImg('academics')}">
+                <div>
+                    <p class="eyebrow">Assessment</p>
+                    <h1>Examinations</h1>
+                    <p class="muted">Marks are locked once results are published. Grades and points
+                       are assigned automatically from the examination grading scale.</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>All examinations</h2>
+                        <p class="sub" th:text="${#lists.size(items)} + ' on record'">0</p>
+                    </div>
+                    <input type="search" data-filter="examTable" placeholder="Filter…" style="max-width:220px">
+                </div>
+
+                <div th:if="${#lists.isEmpty(items)}" class="empty">
+                    <span class="big">✎</span>No examinations have been set up yet.
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(items)}">
+                    <table class="data" id="examTable">
+                        <thead>
+                        <tr><th>Examination</th><th>Stream</th><th>Term</th><th>Date</th>
+                            <th>Grading scale</th><th>Status</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="e : ${items}">
+                            <td>
+                                <a th:href="@{/examinations/{id}(id=${e.id})}" th:text="${e.name}">Name</a>
+                            </td>
+                            <td th:text="${e.classStream.schoolClass.name} + ' ' + ${e.classStream.name}">Form 1 North</td>
+                            <td th:text="${e.term.name}">Term 2</td>
+                            <td th:text="${#temporals.format(e.examinationDate, 'd MMM yyyy')}">date</td>
+                            <td th:text="${e.gradingScale.name}">KCSE</td>
+                            <td>
+                                <span class="badge" th:classappend="${e.published} ? 'good' : 'warn'"
+                                      th:text="${e.published} ? 'Published' : 'Draft'">Draft</span>
+                            </td>
+                            <td class="right nowrap">
+                                <a class="btn ghost sm" th:href="@{/examinations/{id}(id=${e.id})}">
+                                    <span th:text="${e.published} ? 'View marks' : 'Enter marks'">Enter marks</span></a>
+
+                                <form th:unless="${e.published}" style="display:inline"
+                                      th:action="@{/examinations/{id}/publish(id=${e.id})}" method="post"
+                                      data-confirm="Publish these results? Marks can no longer be changed afterwards."
+                                      sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL')">
+                                    <button class="btn good sm" type="submit">Publish</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

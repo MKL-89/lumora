@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('User accounts')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('users')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('User accounts')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Administration</p>
+                    <h1>User accounts</h1>
+                    <p class="muted" data-filter-count="userTable"
+                       th:text="${#lists.size(items)} + ' accounts'">0 accounts</p>
+                </div>
+                <a class="btn ghost" th:href="@{/roles}">Roles</a>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>All accounts</h2>
+                    <input type="search" data-filter="userTable"
+                           placeholder="Filter by username, email or role…" style="max-width:300px">
+                </div>
+
+                <div th:if="${#lists.isEmpty(items)}" class="empty">
+                    <span class="big">◎</span>No accounts exist.
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(items)}">
+                    <table class="data" id="userTable">
+                        <thead>
+                        <tr><th>Username</th><th>Email</th><th>Roles</th>
+                            <th class="num">Failed logins</th><th>Status</th><th>Password set</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="u : ${items}">
+                            <td class="mono" th:text="${u.username}">user</td>
+                            <td th:text="${u.email}">email</td>
+                            <td>
+                                <span class="badge info" th:each="r : ${u.roles}"
+                                      style="margin-right:.2rem"
+                                      th:text="${#strings.replace(r.name, '_', ' ')}">ROLE</span>
+                            </td>
+                            <td class="num" th:text="${u.failedLoginAttempts}">0</td>
+                            <td>
+                                <span class="badge bad" th:if="${u.locked}">Locked</span>
+                                <span class="badge warn"
+                                      th:if="${not u.locked and u.lockoutUntil != null
+                                              and u.lockoutUntil.isAfter(#temporals.createNow())}">Temporarily locked</span>
+                                <span class="badge" th:classappend="${u.enabled} ? 'good' : 'bad'"
+                                      th:text="${u.enabled} ? 'Enabled' : 'Disabled'">Enabled</span>
+                            </td>
+                            <td class="faint" th:text="${u.passwordChangedAt != null}
+                                                       ? ${#temporals.format(u.passwordChangedAt, 'd MMM yyyy')}
+                                                       : 'Never changed'">date</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

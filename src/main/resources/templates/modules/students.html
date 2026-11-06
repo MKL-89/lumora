@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Students')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('students')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Students')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Records</p>
+                    <h1>Students</h1>
+                    <p class="muted" data-filter-count="studentTable"
+                       th:text="${#lists.size(items)} + ' records'">0 records</p>
+                </div>
+                <a class="btn" th:href="@{/students/new}"
+                   sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','REGISTRAR')">
+                    + Admit student</a>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <form th:action="@{/students}" method="get" class="inline-form" style="flex:1">
+                        <div class="field" style="flex:1;max-width:340px">
+                            <input type="search" name="q" th:value="${query}"
+                                   placeholder="Search by name or admission number">
+                        </div>
+                        <button class="btn ghost" type="submit">Search</button>
+                        <a class="btn ghost" th:href="@{/students}" th:if="${query}">Clear</a>
+                    </form>
+                </div>
+
+                <div th:if="${#lists.isEmpty(items)}" class="empty">
+                    <span class="big">◍</span>
+                    <span th:if="${query}">No learner matched that search.</span>
+                    <span th:unless="${query}">No learners on record yet.</span>
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(items)}">
+                    <table class="data" id="studentTable">
+                        <thead>
+                        <tr>
+                            <th>Admission no.</th><th>Name</th><th>Gender</th>
+                            <th>Date of birth</th><th>Status</th><th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${items}">
+                            <td class="mono" th:text="${s.admissionNumber}">ADM/2026/001</td>
+                            <td>
+                                <a th:href="@{/students/{id}(id=${s.id})}"
+                                   th:text="${s.firstName} + ' '
+                                            + (${s.middleName} != null ? ${s.middleName} + ' ' : '')
+                                            + ${s.lastName}">Name</a>
+                            </td>
+                            <td th:text="${s.gender}">MALE</td>
+                            <td th:text="${#temporals.format(s.dateOfBirth, 'd MMM yyyy')}">date</td>
+                            <td>
+                                <span class="badge" th:classappend="${s.active} ? 'good' : 'bad'"
+                                      th:text="${s.active} ? 'Active' : 'Inactive'">Active</span>
+                            </td>
+                            <td class="right">
+                                <a class="btn ghost sm" th:href="@{/students/{id}(id=${s.id})}">Open</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

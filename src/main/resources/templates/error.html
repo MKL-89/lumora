@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Error')}"></head>
+<body>
+
+<div class="error-page">
+    <div style="max-width:34rem">
+        <div class="error-code" th:text="${status} ?: '500'">500</div>
+
+        <h1 th:text="${title} ?: (${error} ?: 'Something went wrong')">Something went wrong</h1>
+
+        <p class="muted" th:text="${detail} ?: (${message} ?: 'The system could not complete that request.')">
+            The system could not complete that request.
+        </p>
+
+        <p class="faint mono" th:if="${path}" th:text="${path}">/path</p>
+
+        <div class="row" style="justify-content:center;margin-top:1.2rem">
+            <a class="btn" th:href="@{/home}">Back to dashboard</a>
+            <a class="btn ghost" href="javascript:history.back()">Go back</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

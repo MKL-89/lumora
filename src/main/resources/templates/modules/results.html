@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Results analysis')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('results')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Results analysis')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head hero">
+                <img th:replace="~{fragments/layout :: heroImg('academics')}">
+                <div>
+                    <p class="eyebrow">Academic performance</p>
+                    <h1>Results analysis</h1>
+                    <p class="muted">Whole-school figures drawn from every mark on record.</p>
+                </div>
+            </div>
+
+            <section class="grid g-2">
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Mean mark by subject</h2>
+                            <p class="sub">Higher bars are stronger subjects</p>
+                        </div>
+                    </div>
+                    <div class="panel-body tight">
+                        <div th:replace="~{fragments/charts :: bars(${performance}, '')}"></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Grade distribution</h2>
+                            <p class="sub">Number of results in each grade band</p>
+                        </div>
+                    </div>
+                    <div class="panel-body tight">
+                        <div th:replace="~{fragments/charts :: bars(${grades}, '')}"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" style="margin-top:1.05rem">
+                <div class="panel-head">
+                    <div>
+                        <h2>Examinations</h2>
+                        <p class="sub">Open one to see or enter its mark sheets</p>
+                    </div>
+                    <input type="search" data-filter="resultExamTable" placeholder="Filter…" style="max-width:220px">
+                </div>
+
+                <div th:if="${#lists.isEmpty(examinations)}" class="empty">
+                    <span class="big">◔</span>No examinations on record.
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(examinations)}">
+                    <table class="data" id="resultExamTable">
+                        <thead>
+                        <tr><th>Examination</th><th>Stream</th><th>Date</th><th>Status</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="e : ${examinations}">
+                            <td th:text="${e.name}">Name</td>
+                            <td th:text="${e.classStream.schoolClass.name} + ' ' + ${e.classStream.name}">Form 1</td>
+                            <td th:text="${#temporals.format(e.examinationDate, 'd MMM yyyy')}">date</td>
+                            <td><span class="badge" th:classappend="${e.published} ? 'good' : 'warn'"
+                                      th:text="${e.published} ? 'Published' : 'Draft'">Draft</span></td>
+                            <td class="right">
+                                <a class="btn ghost sm" th:href="@{/examinations/{id}(id=${e.id})}">Open</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

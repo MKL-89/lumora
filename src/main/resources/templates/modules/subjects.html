@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Subjects')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('subjects')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Subjects')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Academics</p>
+                    <h1>Subjects</h1>
+                    <p class="muted" th:text="${#lists.size(items)} + ' subjects on the curriculum'">0</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Curriculum</h2>
+                    <input type="search" data-filter="subjectTable" placeholder="Filter…" style="max-width:240px">
+                </div>
+
+                <div th:if="${#lists.isEmpty(items)}" class="empty">
+                    <span class="big">≡</span>No subjects configured.
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(items)}">
+                    <table class="data" id="subjectTable">
+                        <thead><tr><th>Code</th><th>Subject</th><th>Type</th></tr></thead>
+                        <tbody>
+                        <tr th:each="s : ${items}">
+                            <td class="mono" th:text="${s.code}">MAT</td>
+                            <td th:text="${s.name}">Mathematics</td>
+                            <td>
+                                <span class="badge" th:classappend="${s.compulsory} ? 'info' : ''"
+                                      th:text="${s.compulsory} ? 'Compulsory' : 'Elective'">Elective</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

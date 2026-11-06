@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admit student')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('students')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Admit student')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Admissions</p>
+                    <h1>Admit a new learner</h1>
+                    <p class="muted">Class placement is part of admission: a learner without a
+                       stream cannot be registered, marked present, or examined.</p>
+                </div>
+                <a class="btn ghost" th:href="@{/students}">Back to list</a>
+            </div>
+
+            <div class="grid g-8-4">
+                <div class="panel">
+                    <div class="panel-head"><h2>Learner details</h2></div>
+                    <div class="panel-body">
+
+                        <form th:action="@{/students}" method="post">
+                            <!-- Identity -->
+                            <div class="field">
+                                <label for="admissionNumber">Admission number</label>
+                                <input type="text" id="admissionNumber" name="admissionNumber" required
+                                       maxlength="30" placeholder="ADM/2026/097"
+                                       th:value="${param.admissionNumber}">
+                                <div class="hint">Must be unique across the whole school.</div>
+                            </div>
+
+                            <div class="form-row three">
+                                <div class="field">
+                                    <label for="firstName">First name</label>
+                                    <input type="text" id="firstName" name="firstName" required
+                                           th:value="${param.firstName}">
+                                </div>
+                                <div class="field">
+                                    <label for="middleName">Middle name</label>
+                                    <input type="text" id="middleName" name="middleName"
+                                           th:value="${param.middleName}">
+                                </div>
+                                <div class="field">
+                                    <label for="lastName">Last name</label>
+                                    <input type="text" id="lastName" name="lastName" required
+                                           th:value="${param.lastName}">
+                                </div>
+                            </div>
+
+                            <div class="form-row three">
+                                <div class="field">
+                                    <label for="gender">Gender</label>
+                                    <select id="gender" name="gender" required>
+                                        <option value="">Select…</option>
+                                        <option th:each="g : ${genders}" th:value="${g}" th:text="${g}">MALE</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="dateOfBirth">Date of birth</label>
+                                    <input type="date" id="dateOfBirth" name="dateOfBirth" required
+                                           th:value="${param.dateOfBirth}">
+                                </div>
+                                <div class="field">
+                                    <label for="admissionDate">Admission date</label>
+                                    <input type="date" id="admissionDate" name="admissionDate" required
+                                           th:value="${param.admissionDate}">
+                                </div>
+                            </div>
+
+                            <hr class="divider">
+
+                            <!-- Placement -->
+                            <div class="form-row">
+                                <div class="field">
+                                    <label for="academicYearId">Academic year</label>
+                                    <select id="academicYearId" name="academicYearId" required>
+                                        <option value="">Select…</option>
+                                        <option th:each="y : ${years}" th:value="${y.id}"
+                                                th:text="${y.name} + (${y.active} ? ' (current)' : '')">2026</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="classStreamId">Class and stream</label>
+                                    <select id="classStreamId" name="classStreamId" required>
+                                        <option value="">Select…</option>
+                                        <option th:each="s : ${streams}" th:value="${s.id}"
+                                                th:text="${s.schoolClass.name} + ' ' + ${s.name}">Form 1 North</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- The school is implicit for a single-school deployment. -->
+                            <input type="hidden" name="schoolId" value="1">
+
+                            <div class="form-actions">
+                                <button class="btn" type="submit">Admit learner</button>
+                                <a class="btn ghost" th:href="@{/students}">Cancel</a>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><h2>Rules applied</h2></div>
+                    <div class="panel-body">
+                        <ul style="padding-left:1.05rem;margin:0;font-size:.87rem;color:var(--text-dim)"
+                            class="stack">
+                            <li>The admission number must not already exist.</li>
+                            <li>The stream and academic year must both belong to this school.</li>
+                            <li>The date of birth must be in the past.</li>
+                            <li>A learner cannot be admitted before they were born.</li>
+                            <li>The learner record and the class placement are written in a
+                                single transaction — if either fails, neither is saved.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

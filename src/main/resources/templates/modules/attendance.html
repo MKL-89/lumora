@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Attendance')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('attendance')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Attendance')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Daily register</p>
+                    <h1>Attendance</h1>
+                    <p class="muted">One record per learner, per stream, per day. Re-saving a
+                       register corrects it rather than duplicating it.</p>
+                </div>
+            </div>
+
+            <!-- ---------- Register selector ---------- -->
+            <div class="panel">
+                <div class="panel-head"><h2>Choose a register</h2></div>
+                <div class="panel-body">
+                    <form th:action="@{/attendance}" method="get" class="inline-form">
+                        <div class="field">
+                            <label for="streamId">Class and stream</label>
+                            <select id="streamId" name="streamId" required>
+                                <option value="">Select…</option>
+                                <option th:each="s : ${streams}" th:value="${s.id}"
+                                        th:selected="${s.id == selectedStream}"
+                                        th:text="${s.schoolClass.name} + ' ' + ${s.name}">Form 1 North</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="teacherId">Recorded by</label>
+                            <select id="teacherId" name="teacherId" required>
+                                <option value="">Select…</option>
+                                <option th:each="t : ${teachers}" th:value="${t.id}"
+                                        th:selected="${t.id == selectedTeacher}"
+                                        th:text="${t.firstName} + ' ' + ${t.lastName}
+                                                 + ' (' + ${t.employeeNumber} + ')'">Teacher</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" name="date" required
+                                   th:value="${date}" th:max="${today}">
+                        </div>
+                        <button class="btn" type="submit">Load register</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ---------- The register itself ---------- -->
+            <div class="panel" style="margin-top:1.05rem" th:if="${rows != null}">
+                <div class="panel-head">
+                    <div>
+                        <h2>Register</h2>
+                        <p class="sub" th:text="${#temporals.format(date, 'EEEE d MMMM yyyy')}
+                                                + ' · ' + ${#lists.size(rows)} + ' learners'">date</p>
+                    </div>
+                    <div class="row" th:if="${not #lists.isEmpty(rows)}">
+                        <button class="btn ghost sm" type="button"
+                                data-set-all="PRESENT" data-scope="registerBody">Mark all present</button>
+                        <button class="btn ghost sm" type="button"
+                                data-set-all="" data-scope="registerBody">Clear</button>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(rows)}" class="empty">
+                    <span class="big">◍</span>
+                    No learners are actively enrolled in this stream.
+                </div>
+
+                <form th:unless="${#lists.isEmpty(rows)}" th:action="@{/attendance}" method="post">
+                    <input type="hidden" name="streamId" th:value="${selectedStream}">
+                    <input type="hidden" name="teacherId" th:value="${selectedTeacher}">
+                    <input type="hidden" name="date" th:value="${date}">
+
+                    <div class="table-wrap">
+                        <table class="data">
+                            <thead>
+                            <tr><th>Admission no.</th><th>Learner</th><th style="width:200px">Status</th><th>On file</th></tr>
+                            </thead>
+                            <tbody id="registerBody">
+                            <tr th:each="row : ${rows}">
+                                <td class="mono" th:text="${row.admissionNumber}">ADM</td>
+                                <td th:text="${row.fullName}">Name</td>
+                                <td>
+                                    <select data-register th:name="'status_' + ${row.studentId}">
+                                        <option value="">— not marked —</option>
+                                        <option th:each="st : ${statuses}" th:value="${st}"
+                                                th:selected="${st == row.status}" th:text="${st}">PRESENT</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <span class="badge good" th:if="${row.alreadyMarked()}">Saved</span>
+                                    <span class="badge" th:unless="${row.alreadyMarked()}">Pending</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="panel-body" style="border-top:1px solid var(--line)">
+                        <div class="form-actions">
+                            <button class="btn" type="submit">Save register</button>
+                            <span class="faint">Learners left unmarked are skipped.</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel" style="margin-top:1.05rem" th:if="${rows == null}">
+                <div class="empty">
+                    <span class="big">▤</span>
+                    Pick a stream, a teacher, and a date, then load the register.
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

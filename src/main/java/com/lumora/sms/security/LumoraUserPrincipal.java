@@ -1,0 +1,7 @@
+package com.lumora.sms.security;
+import com.lumora.sms.entity.User; import org.springframework.security.core.*; import org.springframework.security.core.authority.SimpleGrantedAuthority; import org.springframework.security.core.userdetails.UserDetails; import java.time.LocalDateTime; import java.util.*;
+/** Immutable Spring Security view of a Lumora user. */
+public record LumoraUserPrincipal(Long id,String username,String password,boolean enabled,boolean accountNonLocked,Collection<? extends GrantedAuthority> authorities) implements UserDetails {
+    public static LumoraUserPrincipal from(User user){ boolean unlocked=!user.isLocked()&&(user.getLockoutUntil()==null||user.getLockoutUntil().isBefore(LocalDateTime.now())); return new LumoraUserPrincipal(user.getId(),user.getUsername(),user.getPasswordHash(),user.isEnabled(),unlocked,user.getRoles().stream().map(r->new SimpleGrantedAuthority("ROLE_"+r.getName().name())).toList()); }
+    @Override public Collection<? extends GrantedAuthority> getAuthorities(){return authorities;} @Override public String getUsername(){return username;} @Override public String getPassword(){return password;} @Override public boolean isEnabled(){return enabled;} @Override public boolean isAccountNonLocked(){return accountNonLocked;} @Override public boolean isAccountNonExpired(){return true;} @Override public boolean isCredentialsNonExpired(){return true;}
+}

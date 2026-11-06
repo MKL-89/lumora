@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Announcements')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('announcements')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Announcements')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Communication</p>
+                    <h1>Announcements</h1>
+                    <p class="muted">Notices published here appear on every dashboard until they expire.</p>
+                </div>
+            </div>
+
+            <section class="grid g-8-4">
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Published notices</h2>
+                            <p class="sub" th:text="${#lists.size(items)} + ' on record'">0</p>
+                        </div>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(items)}" class="empty">
+                        <span class="big">◈</span>Nothing has been published yet.
+                    </div>
+
+                    <div class="notice" th:each="a : ${items}">
+                        <div class="spread">
+                            <h3 th:text="${a.title}">Title</h3>
+                            <span class="badge"
+                                  th:classappend="${a.expiresAt == null or a.expiresAt.isAfter(#temporals.createNow())}
+                                                  ? 'good' : ''"
+                                  th:text="${a.expiresAt == null or a.expiresAt.isAfter(#temporals.createNow())}
+                                           ? 'Live' : 'Expired'">Live</span>
+                        </div>
+                        <p th:text="${a.content}">Body</p>
+                        <span class="faint"
+                              th:text="'By ' + ${a.createdBy.username} + ' · '
+                                       + ${#temporals.format(a.publishedAt, 'd MMM yyyy, HH:mm')}
+                                       + (${a.expiresAt != null}
+                                          ? ' · expires ' + ${#temporals.format(a.expiresAt, 'd MMM yyyy')} : '')">
+                            meta</span>
+                    </div>
+                </div>
+
+                <div class="panel" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','CLASS_TEACHER')">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Publish a notice</h2>
+                            <p class="sub">Goes out to the whole school</p>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <form th:action="@{/announcements}" method="post">
+                            <div class="field">
+                                <label for="title">Title</label>
+                                <input type="text" id="title" name="title" required maxlength="150"
+                                       placeholder="e.g. Half-term break">
+                            </div>
+                            <div class="field">
+                                <label for="content">Message</label>
+                                <textarea id="content" name="content" required maxlength="5000"
+                                          placeholder="What do you want the school to know?"></textarea>
+                            </div>
+                            <div class="field">
+                                <label for="daysVisible">Visible for (days)</label>
+                                <input type="number" id="daysVisible" name="daysVisible"
+                                       min="1" max="365" value="30">
+                                <div class="hint">Leave blank for a notice that never expires.</div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn" type="submit">Publish</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

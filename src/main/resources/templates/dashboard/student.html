@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('My portal')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('dashboard')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('My portal')}"></nav>
+
+        <main class="page" th:with="s=${profile.student}">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head hero">
+                <img th:replace="~{fragments/layout :: heroImg('portal')}">
+                <div>
+                    <p class="eyebrow">Student portal</p>
+                    <h1 th:text="${s.firstName} + ' ' + ${s.lastName}">Name</h1>
+                    <p class="muted">
+                        <span class="mono" th:text="${s.admissionNumber}">ADM</span> ·
+                        <span th:text="${profile.placement()}">Form 1 North</span> ·
+                        <span th:text="${profile.academicYear}">2026</span>
+                    </p>
+                </div>
+            </div>
+
+            <section class="grid g-4">
+                <div class="stat">
+                    <div class="label">Attendance rate</div>
+                    <div class="value" th:text="${profile.attendance.rate()} + '%'">0%</div>
+                    <div class="foot" th:text="${profile.attendance.total()} + ' days on record'">0 days</div>
+                </div>
+                <div class="stat is-warn">
+                    <div class="label">Fee balance</div>
+                    <div class="value sm"
+                         th:text="'KES ' + ${@chartRenderer.money(profile.outstandingBalance)}">KES 0</div>
+                    <div class="foot" th:text="${#lists.size(profile.invoices)} + ' invoice(s)'">0</div>
+                </div>
+                <div class="stat is-good">
+                    <div class="label">Published results</div>
+                    <div class="value" th:text="${#lists.size(results)}">0</div>
+                    <div class="foot">Marks released to you</div>
+                </div>
+                <div class="stat">
+                    <div class="label">Library loans</div>
+                    <div class="value" th:text="${#lists.size(profile.loans)}">0</div>
+                    <div class="foot">Copies in your name</div>
+                </div>
+            </section>
+
+            <section class="grid g-7-5" style="margin-top:1.05rem">
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>My results</h2>
+                            <p class="sub">Only examinations the school has published</p>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(results)}" class="empty">
+                        <span class="big">✎</span>No results have been released yet.
+                    </div>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(results)}">
+                        <table class="data">
+                            <thead>
+                            <tr><th>Examination</th><th>Subject</th><th class="num">Mark</th>
+                                <th class="num">Out of</th><th>Grade</th><th class="num">Points</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="r : ${results}">
+                                <td th:text="${r.examSubject.examination.name}">Exam</td>
+                                <td th:text="${r.examSubject.subject.name}">Subject</td>
+                                <td class="num" th:text="${r.marks}">0</td>
+                                <td class="num" th:text="${r.examSubject.maximumMark}">100</td>
+                                <td><span class="grade"
+                                          th:classappend="${@chartRenderer.gradeClass(r.grade)}"
+                                          th:text="${r.grade} ?: '—'">—</span></td>
+                                <td class="num" th:text="${r.points} ?: '—'">—</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="stack">
+                    <div class="panel">
+                        <div class="panel-head"><h2>Attendance</h2></div>
+                        <div class="panel-body stack">
+                            <div>
+                                <div class="spread" style="margin-bottom:.3rem">
+                                    <span class="faint">Overall</span>
+                                    <strong th:text="${profile.attendance.rate()} + '%'">0%</strong>
+                                </div>
+                                <div class="meter"
+                                     th:classappend="${@chartRenderer.meterClass(profile.attendance.rate())}">
+                                    <span th:style="'width:' + ${profile.attendance.rate()} + '%'"></span>
+                                </div>
+                            </div>
+                            <dl class="kv">
+                                <dt>Present</dt><dd th:text="${profile.attendance.present}">0</dd>
+                                <dt>Late</dt><dd th:text="${profile.attendance.late}">0</dd>
+                                <dt>Absent</dt><dd th:text="${profile.attendance.absent}">0</dd>
+                                <dt>Excused</dt><dd th:text="${profile.attendance.excused}">0</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-head"><h2>Notices</h2></div>
+                        <div th:if="${#lists.isEmpty(announcements)}" class="empty">
+                            <span class="big">◈</span>Nothing published.
+                        </div>
+                        <div class="notice" th:each="a, stat : ${announcements}" th:if="${stat.index &lt; 3}">
+                            <h3 th:text="${a.title}">Title</h3>
+                            <p th:text="${#strings.abbreviate(a.content, 120)}">Body</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid g-2" style="margin-top:1.05rem">
+                <div class="panel">
+                    <div class="panel-head"><h2>My fee invoices</h2></div>
+                    <div th:if="${#lists.isEmpty(profile.invoices)}" class="empty">
+                        <span class="big">◇</span>No invoices raised.
+                    </div>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(profile.invoices)}">
+                        <table class="data">
+                            <thead><tr><th>Invoice</th><th>Term</th><th class="num">Total</th>
+                                       <th class="num">Balance</th><th>Status</th></tr></thead>
+                            <tbody>
+                            <tr th:each="i : ${profile.invoices}">
+                                <td class="mono" th:text="${i.invoiceNumber}">INV</td>
+                                <td th:text="${i.term.name}">Term</td>
+                                <td class="num" th:text="${@chartRenderer.money(i.totalAmount)}">0</td>
+                                <td class="num" th:text="${@chartRenderer.money(i.balanceAmount)}">0</td>
+                                <td><span class="badge"
+                                          th:classappend="${i.status.name() == 'PAID'} ? 'good'
+                                                          : (${i.status.name() == 'PARTIALLY_PAID'} ? 'warn' : 'bad')"
+                                          th:text="${i.status}">STATUS</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><h2>My library loans</h2></div>
+                    <div th:if="${#lists.isEmpty(profile.loans)}" class="empty">
+                        <span class="big">▣</span>You have no copies out.
+                    </div>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(profile.loans)}">
+                        <table class="data">
+                            <thead><tr><th>Title</th><th>Borrowed</th><th>Due</th><th>Status</th></tr></thead>
+                            <tbody>
+                            <tr th:each="l : ${profile.loans}">
+                                <td th:text="${l.bookCopy.book.title}">Title</td>
+                                <td th:text="${#temporals.format(l.borrowedOn, 'd MMM')}">date</td>
+                                <td th:text="${#temporals.format(l.dueDate, 'd MMM')}">date</td>
+                                <td><span class="badge"
+                                          th:classappend="${l.status.name() == 'RETURNED'} ? 'good' : 'info'"
+                                          th:text="${l.status}">STATUS</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

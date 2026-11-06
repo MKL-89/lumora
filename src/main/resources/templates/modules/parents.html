@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Parents')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('parents')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Parents')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Administration</p>
+                    <h1>Parents and guardians</h1>
+                    <p class="muted" data-filter-count="parentTable"
+                       th:text="${#lists.size(items)} + ' records'">0 records</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Guardian register</h2>
+                    <input type="search" data-filter="parentTable"
+                           placeholder="Filter by name or phone…" style="max-width:280px">
+                </div>
+
+                <div th:if="${#lists.isEmpty(items)}" class="empty">
+                    <span class="big">◑</span>No guardians on record.
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(items)}">
+                    <table class="data" id="parentTable">
+                        <thead>
+                        <tr><th>Name</th><th>Phone</th><th>Email</th>
+                            <th>Occupation</th><th>Portal login</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="p : ${items}">
+                            <td th:text="${p.firstName} + ' ' + ${p.lastName}">Name</td>
+                            <td class="mono" th:text="${p.phone}">phone</td>
+                            <td th:text="${p.email} ?: '—'">—</td>
+                            <td th:text="${p.occupation} ?: '—'">—</td>
+                            <td>
+                                <span class="mono" th:if="${p.user != null}" th:text="${p.user.username}">user</span>
+                                <span class="badge" th:unless="${p.user != null}">Not issued</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

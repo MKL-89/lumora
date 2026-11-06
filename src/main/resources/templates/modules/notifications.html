@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Notifications')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('notifications')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Notifications')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Communication</p>
+                    <h1>My notifications</h1>
+                    <p class="muted">Messages addressed to your account specifically, rather than
+                       to the whole school.</p>
+                </div>
+                <a class="btn ghost" th:href="@{/announcements}">School announcements</a>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Inbox</h2>
+                        <p class="sub" th:text="${#lists.size(items)} + ' message(s)'">0</p>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(items)}" class="empty">
+                    <span class="big">◉</span>
+                    Your inbox is empty. School-wide notices appear under Announcements.
+                </div>
+
+                <div class="feed" th:unless="${#lists.isEmpty(items)}">
+                    <div class="feed-item" th:each="r : ${items}">
+                        <span class="dot" th:classappend="${r.readAt == null} ? '' : 'ok'"></span>
+                        <span>
+                            <strong th:text="${r.notification.title}">Title</strong><br>
+                            <span class="faint" th:text="${r.notification.message}">Message</span>
+                        </span>
+                        <span class="when"
+                              th:text="${#temporals.format(r.notification.sentAt, 'd MMM, HH:mm')}">date</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

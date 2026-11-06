@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Teaching allocation')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('timetable')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Teaching allocation')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Academics</p>
+                    <h1>Teaching allocation</h1>
+                    <p class="muted">Who teaches what, where, and when. These assignments are what
+                       the examination service checks before it accepts a mark.</p>
+                </div>
+            </div>
+
+            <section class="grid g-3">
+                <div class="panel">
+                    <div class="panel-head"><h2>Academic years</h2></div>
+                    <div th:if="${#lists.isEmpty(years)}" class="empty"><span class="big">◫</span>None configured.</div>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(years)}">
+                        <table class="data">
+                            <thead><tr><th>Year</th><th>Runs</th><th>Status</th></tr></thead>
+                            <tbody>
+                            <tr th:each="y : ${years}">
+                                <td th:text="${y.name}">2026</td>
+                                <td class="faint"
+                                    th:text="${#temporals.format(y.startDate, 'd MMM')} + ' – '
+                                             + ${#temporals.format(y.endDate, 'd MMM')}">dates</td>
+                                <td><span class="badge" th:classappend="${y.active} ? 'good' : ''"
+                                          th:text="${y.active} ? 'Current' : 'Closed'">Closed</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><h2>Terms</h2></div>
+                    <div th:if="${#lists.isEmpty(terms)}" class="empty"><span class="big">◫</span>None configured.</div>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(terms)}">
+                        <table class="data">
+                            <thead><tr><th>Term</th><th>Year</th><th>Status</th></tr></thead>
+                            <tbody>
+                            <tr th:each="t : ${terms}">
+                                <td th:text="${t.name}">Term 1</td>
+                                <td th:text="${t.academicYear.name}">2026</td>
+                                <td><span class="badge" th:classappend="${t.active} ? 'good' : ''"
+                                          th:text="${t.active} ? 'Current' : 'Closed'">Closed</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><h2>Streams</h2></div>
+                    <div th:if="${#lists.isEmpty(streams)}" class="empty"><span class="big">◫</span>None configured.</div>
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(streams)}">
+                        <table class="data">
+                            <thead><tr><th>Class</th><th>Stream</th></tr></thead>
+                            <tbody>
+                            <tr th:each="s : ${streams}">
+                                <td th:text="${s.schoolClass.name}">Form 1</td>
+                                <td th:text="${s.name}">North</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <div class="panel" style="margin-top:1.05rem">
+                <div class="panel-head">
+                    <div>
+                        <h2>Current term</h2>
+                        <p class="sub">Assignments are scoped to a term, so allocations can change
+                           between terms without rewriting history</p>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <p th:if="${activeTerm == null}" class="muted">No term is currently flagged active.</p>
+                    <dl class="kv" th:unless="${activeTerm == null}">
+                        <dt>Term</dt><dd th:text="${activeTerm.name}">Term 2</dd>
+                        <dt>Academic year</dt><dd th:text="${activeTerm.academicYear.name}">2026</dd>
+                        <dt>Starts</dt>
+                        <dd th:text="${#temporals.format(activeTerm.startDate, 'd MMMM yyyy')}">date</dd>
+                        <dt>Ends</dt>
+                        <dd th:text="${#temporals.format(activeTerm.endDate, 'd MMMM yyyy')}">date</dd>
+                    </dl>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

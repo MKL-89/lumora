@@ -1,0 +1,94 @@
+========================================================================
+  LUMORA SCHOOL MANAGEMENT SYSTEM - HOW TO RUN
+========================================================================
+
+This folder runs on ANY computer that has Java. Nothing else is needed:
+no MySQL, no XAMPP, no Maven, no internet. The database is built in.
+
+
+------------------------------------------------------------------------
+ STEP 1 - Make sure Java is installed  (one time only)
+------------------------------------------------------------------------
+
+  Open Command Prompt and type:      java -version
+
+  If it prints a version 17 or higher, you are ready. Go to Step 2.
+
+  If it says "not recognized", install Java first:
+    1. Go to  https://adoptium.net/temurin/releases/?version=17
+    2. Download the Windows  .msi  installer (JDK 17, x64).
+    3. Run it. On the "Custom Setup" screen, turn ON
+       "Add to PATH"  and  "Set JAVA_HOME".
+    4. Finish, then close and reopen Command Prompt.
+
+
+------------------------------------------------------------------------
+ STEP 2 - Start Lumora
+------------------------------------------------------------------------
+
+  WINDOWS:  double-click        RUN-LUMORA.bat
+  Mac/Linux: in a terminal run  bash RUN-LUMORA.sh
+
+  A black window opens and prints startup messages.
+  Wait ~30-40 seconds until you see:
+
+        Started LumoraApplication
+
+  Leave that window OPEN while you use the system.
+  (Closing it stops the server.)
+
+
+------------------------------------------------------------------------
+ STEP 3 - Open it in your browser
+------------------------------------------------------------------------
+
+        http://localhost:8081
+
+  Sign in with:
+
+        Username:  principal
+        Password:  Lumora@123
+
+  Other roles (same password):
+        bursar        - finance
+        librarian     - library
+        grace.wanjiru - class teacher
+        student       - student portal
+        parent        - parent portal
+        superadmin    - full administration
+
+
+------------------------------------------------------------------------
+ SHOWING SEVERAL ROLES AT ONCE (for the presentation)
+------------------------------------------------------------------------
+
+  Each browser TAB keeps its own separate login. Open several tabs and
+  sign into a different role in each - they will not affect each other.
+
+  (This is why the address bar shows ";jsessionid=..." - it is what
+   keeps each tab independent. It is intentional in this demo mode.)
+
+
+------------------------------------------------------------------------
+ TROUBLESHOOTING
+------------------------------------------------------------------------
+
+  "Port 8081 was already in use"
+      Something else is on that port. Start on another port instead:
+      open Command Prompt in this folder and run:
+
+        java -jar lumora.jar --spring.profiles.active=standalone,demo --server.port=9090
+
+      then open  http://localhost:9090
+
+  "Java was not found"
+      Do Step 1 above (install Java 17+ and tick "Add to PATH").
+
+  Want to start from a completely empty school?
+      Close the server and delete the  lumora-data  folder that appears
+      next to lumora.jar, then start again.
+
+  Nothing shows in the browser / spinning
+      Wait for "Started LumoraApplication" in the black window first.
+      First start is the slowest (~40s); later starts are faster.
+========================================================================

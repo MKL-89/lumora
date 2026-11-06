@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Parent portal')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('dashboard')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Parent portal')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head hero">
+                <img th:replace="~{fragments/layout :: heroImg('portal')}">
+                <div>
+                    <p class="eyebrow">Parent / guardian portal</p>
+                    <h1>My children</h1>
+                    <p class="muted">You can only see learners linked to your account.</p>
+                </div>
+            </div>
+
+            <div class="panel" th:if="${#lists.isEmpty(children)}">
+                <div class="empty">
+                    <span class="big">◍</span>
+                    No learners are linked to this account yet. Contact the registrar.
+                </div>
+            </div>
+
+            <!-- One card per linked child. -->
+            <section class="stack">
+                <div class="panel" th:each="c : ${children}" th:with="s=${c.student}">
+                    <div class="panel-head">
+                        <div>
+                            <h2 th:text="${s.firstName} + ' ' + ${s.lastName}">Name</h2>
+                            <p class="sub">
+                                <span class="mono" th:text="${s.admissionNumber}">ADM</span> ·
+                                <span th:text="${c.placement()}">Form 1 North</span>
+                            </p>
+                        </div>
+                        <a class="btn ghost sm" th:href="@{/students/{id}(id=${s.id})}">Full record</a>
+                    </div>
+
+                    <div class="panel-body">
+                        <div class="grid g-3">
+                            <div>
+                                <div class="spread" style="margin-bottom:.3rem">
+                                    <span class="faint">Attendance</span>
+                                    <strong th:text="${c.attendance.rate()} + '%'">0%</strong>
+                                </div>
+                                <div class="meter" th:classappend="${@chartRenderer.meterClass(c.attendance.rate())}">
+                                    <span th:style="'width:' + ${c.attendance.rate()} + '%'"></span>
+                                </div>
+                                <p class="faint" style="margin-top:.35rem"
+                                   th:text="${c.attendance.present} + ' present · '
+                                            + ${c.attendance.absent} + ' absent · '
+                                            + ${c.attendance.late} + ' late'">summary</p>
+                            </div>
+
+                            <div>
+                                <div class="label faint" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;font-weight:700">
+                                    Fee balance</div>
+                                <div style="font-size:1.4rem;font-weight:700"
+                                     th:text="'KES ' + ${@chartRenderer.money(c.outstandingBalance)}">KES 0</div>
+                                <p class="faint" th:text="${#lists.size(c.invoices)} + ' invoice(s) on file'">0</p>
+                            </div>
+
+                            <div>
+                                <div class="label faint" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;font-weight:700">
+                                    Library</div>
+                                <div style="font-size:1.4rem;font-weight:700" th:text="${#lists.size(c.loans)}">0</div>
+                                <p class="faint">copies currently on loan</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" style="margin-top:1.05rem">
+                <div class="panel-head"><h2>School notices</h2></div>
+                <div th:if="${#lists.isEmpty(announcements)}" class="empty">
+                    <span class="big">◈</span>Nothing published.
+                </div>
+                <div class="notice" th:each="a : ${announcements}">
+                    <h3 th:text="${a.title}">Title</h3>
+                    <p th:text="${a.content}">Body</p>
+                    <span class="faint" th:text="${#temporals.format(a.publishedAt, 'd MMM yyyy')}">date</span>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

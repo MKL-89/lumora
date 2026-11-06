@@ -1,0 +1,4 @@
+package com.lumora.sms.entity;
+import com.lumora.sms.enums.PaymentMethod; import jakarta.persistence.*; import lombok.*; import java.math.BigDecimal; import java.time.LocalDateTime;
+@Entity @Table(name="payments") @Getter @Setter @NoArgsConstructor
+public class Payment extends BaseEntity { @ManyToOne(optional=false) @JoinColumn(name="student_invoice_id") private StudentInvoice studentInvoice; @Column(nullable=false,unique=true,length=40) private String receiptNumber; @Column(nullable=false,precision=15,scale=2) private BigDecimal amount; @Enumerated(EnumType.STRING) @Column(nullable=false,length=20) private PaymentMethod method; @Column(nullable=false) private LocalDateTime paidAt; @Column(length=100) private String referenceNumber; @ManyToOne @JoinColumn(name="received_by_user_id") private User receivedBy; }

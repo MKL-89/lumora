@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mark entry')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('examinations')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Mark entry')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow" th:text="${examination.term.name} + ' · '
+                                                + ${examination.classStream.schoolClass.name} + ' '
+                                                + ${examination.classStream.name}">Term</p>
+                    <h1 th:text="${examination.name}">Examination</h1>
+                    <p class="muted">
+                        <span th:text="${#temporals.format(examination.examinationDate, 'd MMMM yyyy')}">date</span> ·
+                        <span th:text="${examination.gradingScale.name} + ' grading scale'">scale</span> ·
+                        <span class="badge" th:classappend="${examination.published} ? 'good' : 'warn'"
+                              th:text="${examination.published} ? 'Published' : 'Draft'">Draft</span>
+                    </p>
+                </div>
+                <a class="btn ghost" th:href="@{/examinations}">All examinations</a>
+            </div>
+
+            <div class="alert info" th:if="${examination.published}">
+                <span>ⓘ</span>
+                <span>These results are published, so the marks are locked. This is a read-only view.</span>
+            </div>
+
+            <div class="panel" th:if="${#lists.isEmpty(subjects)}">
+                <div class="empty">
+                    <span class="big">≡</span>No subjects have been added to this examination.
+                </div>
+            </div>
+
+            <!-- ---------- Paper selector ---------- -->
+            <div class="panel" th:unless="${#lists.isEmpty(subjects)}">
+                <div class="panel-head"><h2>Choose the paper</h2></div>
+                <div class="panel-body">
+                    <form th:action="@{/examinations/{id}(id=${examination.id})}" method="get" class="inline-form">
+                        <div class="field">
+                            <label for="examSubjectId">Subject</label>
+                            <select id="examSubjectId" name="examSubjectId" required>
+                                <option th:each="es : ${subjects}" th:value="${es.id}"
+                                        th:selected="${examSubject != null and es.id == examSubject.id}"
+                                        th:text="${es.subject.name} + ' (max ' + ${es.maximumMark} + ')'">Subject</option>
+                            </select>
+                        </div>
+                        <button class="btn ghost" type="submit">Open mark sheet</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ---------- Mark sheet ---------- -->
+            <div class="panel" style="margin-top:1.05rem" th:if="${rows != null}">
+                <div class="panel-head">
+                    <div>
+                        <h2 th:text="${examSubject.subject.name}">Subject</h2>
+                        <p class="sub" th:text="${#lists.size(rows)} + ' candidates · maximum mark '
+                                                + ${examSubject.maximumMark}">candidates</p>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(rows)}" class="empty">
+                    <span class="big">◍</span>No learners are enrolled in this stream.
+                </div>
+
+                <form th:unless="${#lists.isEmpty(rows)}"
+                      th:action="@{/examinations/{id}/marks(id=${examination.id})}" method="post">
+                    <input type="hidden" name="examSubjectId" th:value="${examSubject.id}">
+
+                    <div class="panel-body" th:unless="${examination.published}"
+                         style="border-bottom:1px solid var(--line)">
+                        <div class="field" style="max-width:340px;margin-bottom:0">
+                            <label for="teacherId">Entering as</label>
+                            <select id="teacherId" name="teacherId" required>
+                                <option value="">Select the subject teacher…</option>
+                                <option th:each="t : ${teachers}" th:value="${t.id}"
+                                        th:text="${t.firstName} + ' ' + ${t.lastName}
+                                                 + ' (' + ${t.employeeNumber} + ')'">Teacher</option>
+                            </select>
+                            <div class="hint">A teacher may only enter marks for subjects assigned to them
+                                              in this stream and term.</div>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="data">
+                            <thead>
+                            <tr><th>Admission no.</th><th>Candidate</th>
+                                <th class="num" style="width:130px">Mark</th>
+                                <th>Grade</th><th class="num">Points</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="row : ${rows}">
+                                <td class="mono" th:text="${row.admissionNumber}">ADM</td>
+                                <td th:text="${row.fullName}">Name</td>
+                                <td class="num">
+                                    <input type="number" step="0.01" min="0"
+                                           th:max="${examSubject.maximumMark}"
+                                           th:name="'mark_' + ${row.studentId}"
+                                           th:value="${row.marks}"
+                                           th:disabled="${examination.published}"
+                                           style="text-align:right">
+                                </td>
+                                <td><span class="grade" th:classappend="${@chartRenderer.gradeClass(row.grade)}"
+                                          th:text="${row.grade} ?: '—'">—</span></td>
+                                <td class="num" th:text="${row.points} ?: '—'">—</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="panel-body" th:unless="${examination.published}"
+                         style="border-top:1px solid var(--line)">
+                        <div class="form-actions">
+                            <button class="btn" type="submit">Save marks</button>
+                            <span class="faint">Blank cells are skipped. Grades are calculated on save.</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

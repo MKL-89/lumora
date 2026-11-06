@@ -1,0 +1,88 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+  Charts are inline SVG rendered on the server. No charting library is loaded,
+  which is what lets the Content-Security-Policy stay at script-src 'self'.
+  Geometry comes from ChartSeries; this file only draws it.
+-->
+<body>
+
+<!-- ---------- Vertical bar chart ---------- -->
+<div th:fragment="bars(data, suffix)" th:with="s=${@chartRenderer.series(data)}">
+    <div class="empty" th:if="${s.empty}">
+        <span class="big">▤</span>
+        No data recorded yet.
+    </div>
+
+    <svg th:unless="${s.empty}" class="chart" role="img"
+         th:attr="viewBox='0 0 ' + ${s.width} + ' ' + ${s.height}">
+
+        <line th:each="g : ${s.gridlines()}" class="gridline"
+              x1="0" th:y1="${g}" th:x2="${s.width}" th:y2="${g}"/>
+
+        <line class="axis" x1="0" th:y1="${s.baseline()}" th:x2="${s.width}" th:y2="${s.baseline()}"/>
+
+        <g th:each="p, i : ${s.points}">
+            <rect class="bar"
+                  th:x="${s.barX(i.index)}" th:y="${s.barY(p)}"
+                  th:width="${s.barWidth()}" th:height="${s.barHeight(p)}"
+                  rx="3"/>
+            <text class="val" text-anchor="middle"
+                  th:x="${s.centreX(i.index)}" th:y="${s.valueY(p)}"
+                  th:text="${p.rounded()} + ${suffix}">0</text>
+            <text class="lbl" text-anchor="middle" th:if="${s.showLabel(i.index)}"
+                  th:x="${s.centreX(i.index)}" th:y="${s.labelY()}"
+                  th:text="${#strings.abbreviate(p.label, 12)}">Label</text>
+        </g>
+    </svg>
+</div>
+
+<!-- ---------- Trend line chart ---------- -->
+<div th:fragment="trend(data, suffix)" th:with="s=${@chartRenderer.series(data)}">
+    <div class="empty" th:if="${s.empty}">
+        <span class="big">◔</span>
+        No trend to plot yet.
+    </div>
+
+    <svg th:unless="${s.empty}" class="chart" role="img"
+         th:attr="viewBox='0 0 ' + ${s.width} + ' ' + ${s.height}">
+
+        <line th:each="g : ${s.gridlines()}" class="gridline"
+              x1="0" th:y1="${g}" th:x2="${s.width}" th:y2="${g}"/>
+
+        <polygon class="area" th:attr="points=${s.areaPoints()}"/>
+        <polyline class="line" th:attr="points=${s.linePoints()}"/>
+
+        <line class="axis" x1="0" th:y1="${s.baseline()}" th:x2="${s.width}" th:y2="${s.baseline()}"/>
+
+        <g th:each="p, i : ${s.points}">
+            <circle class="dot" r="3" th:cx="${s.centreX(i.index)}" th:cy="${s.barY(p)}"/>
+            <text class="lbl" text-anchor="middle" th:if="${s.showLabel(i.index)}"
+                  th:x="${s.centreX(i.index)}" th:y="${s.labelY()}"
+                  th:text="${p.label}">Label</text>
+        </g>
+    </svg>
+</div>
+
+<!-- ---------- Horizontal breakdown, better for a few long labels ---------- -->
+<div th:fragment="breakdown(data, prefix)" th:with="s=${@chartRenderer.series(data)}">
+    <div class="empty" th:if="${s.empty}">
+        <span class="big">◇</span>
+        Nothing recorded yet.
+    </div>
+
+    <div class="stack" th:unless="${s.empty}">
+        <div th:each="p : ${s.points}">
+            <div class="spread" style="margin-bottom:.25rem">
+                <span style="font-size:.84rem" th:text="${p.label}">Label</span>
+                <span class="mono" th:text="${prefix} + ${@chartRenderer.money(p.value)}">0</span>
+            </div>
+            <div class="meter">
+                <span th:style="'width:' + ${T(java.lang.Math).round(p.value.doubleValue() / s.max() * 100)} + '%'"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

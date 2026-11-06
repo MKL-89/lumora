@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Payments')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('payments')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Payments')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Finance</p>
+                    <h1>Payments</h1>
+                    <p class="muted">A receipt number can only be used once, and a payment can
+                       never exceed the invoice balance.</p>
+                </div>
+                <a class="btn ghost" th:href="@{/fees}">Invoices</a>
+            </div>
+
+            <section class="grid g-8-4">
+
+                <!-- ---------- Receipting form ---------- -->
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Record a payment</h2>
+                            <p class="sub">Cash, cheque, bank transfer or M-Pesa</p>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div th:if="${#lists.isEmpty(invoices)}" class="empty">
+                            <span class="big">◇</span>
+                            There are no invoices to receipt against yet.
+                        </div>
+
+                        <form th:unless="${#lists.isEmpty(invoices)}" th:action="@{/payments}" method="post">
+                            <div class="field">
+                                <label for="invoiceId">Invoice</label>
+                                <select id="invoiceId" name="invoiceId" required>
+                                    <option value="">Select an invoice…</option>
+                                    <option th:each="i : ${invoices}" th:value="${i.id}"
+                                            th:disabled="${i.balanceAmount.signum() == 0}"
+                                            th:text="${i.invoiceNumber} + ' — '
+                                                     + ${i.student.firstName} + ' ' + ${i.student.lastName}
+                                                     + ' — balance KES ' + ${@chartRenderer.money(i.balanceAmount)}">
+                                        Invoice</option>
+                                </select>
+                                <div class="hint">Fully paid invoices cannot be selected.</div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="field">
+                                    <label for="receiptNumber">Receipt number</label>
+                                    <input type="text" id="receiptNumber" name="receiptNumber" required
+                                           maxlength="40" placeholder="RCP-2026-0500">
+                                </div>
+                                <div class="field">
+                                    <label for="amount">Amount (KES)</label>
+                                    <input type="number" id="amount" name="amount" required
+                                           step="0.01" min="0.01" placeholder="10000.00">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="field">
+                                    <label for="method">Method</label>
+                                    <select id="method" name="method" required>
+                                        <option th:each="m : ${methods}" th:value="${m}" th:text="${m}">CASH</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="referenceNumber">Reference</label>
+                                    <input type="text" id="referenceNumber" name="referenceNumber"
+                                           maxlength="100" placeholder="Optional bank or M-Pesa reference">
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="btn" type="submit">Record payment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Collections by method</h2>
+                            <p class="sub">All receipts, KES</p>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div th:replace="~{fragments/charts :: breakdown(${collectionChart}, 'KES ')}"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------- Recent receipts ---------- -->
+            <section class="panel" style="margin-top:1.05rem">
+                <div class="panel-head">
+                    <div>
+                        <h2>Recent receipts</h2>
+                        <p class="sub">Twenty most recent payments</p>
+                    </div>
+                    <input type="search" data-filter="paymentTable" placeholder="Filter…" style="max-width:240px">
+                </div>
+
+                <div th:if="${#lists.isEmpty(payments)}" class="empty">
+                    <span class="big">◆</span>No payments recorded yet.
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(payments)}">
+                    <table class="data" id="paymentTable">
+                        <thead>
+                        <tr><th>Receipt</th><th>Learner</th><th>Invoice</th>
+                            <th class="num">Amount</th><th>Method</th><th>Reference</th><th>Received</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="p : ${payments}">
+                            <td class="mono" th:text="${p.receiptNumber}">RCP</td>
+                            <td>
+                                <a th:href="@{/students/{id}(id=${p.studentInvoice.student.id})}"
+                                   th:text="${p.studentInvoice.student.firstName} + ' '
+                                            + ${p.studentInvoice.student.lastName}">Name</a>
+                            </td>
+                            <td class="mono faint" th:text="${p.studentInvoice.invoiceNumber}">INV</td>
+                            <td class="num" th:text="${@chartRenderer.money(p.amount)}">0</td>
+                            <td><span class="badge info" th:text="${p.method}">CASH</span></td>
+                            <td class="mono faint" th:text="${p.referenceNumber} ?: '—'">—</td>
+                            <td th:text="${#temporals.format(p.paidAt, 'd MMM yyyy, HH:mm')}">date</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

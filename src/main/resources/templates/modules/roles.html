@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Roles')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('roles')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Roles')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Security</p>
+                    <h1>Roles and permissions</h1>
+                    <p class="muted">Eleven roles, each with its own dashboard and its own scope.
+                       Student and guardian access is additionally ownership-checked in the
+                       service layer, never by URL alone.</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Role definitions</h2>
+                    <span class="faint" th:text="${#lists.size(items)} + ' roles'">0</span>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="data">
+                        <thead>
+                        <tr><th>Role</th><th>Spring Security authority</th>
+                            <th>Scope</th><th class="num">Accounts</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="r : ${items}">
+                            <td><strong th:text="${r.label()}">Role</strong></td>
+                            <td class="mono faint" th:text="${r.authority()}">ROLE_X</td>
+                            <td th:text="${r.description}">Scope</td>
+                            <td class="num">
+                                <span class="badge" th:classappend="${r.accounts > 0} ? 'info' : ''"
+                                      th:text="${r.accounts}">0</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

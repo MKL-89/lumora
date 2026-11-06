@@ -1,0 +1,11 @@
+# Normalise text files; keep shell scripts runnable on Mac/Linux and batch files on Windows.
+* text=auto
+mvnw text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.jpg binary
+*.png binary
+*.webp binary
+*.jar binary

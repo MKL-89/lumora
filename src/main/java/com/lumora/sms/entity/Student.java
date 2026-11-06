@@ -1,0 +1,4 @@
+package com.lumora.sms.entity;
+import com.lumora.sms.enums.Gender; import jakarta.persistence.*; import lombok.*; import java.time.LocalDate;
+@Entity @Table(name="students") @Getter @Setter @NoArgsConstructor
+public class Student extends BaseEntity { @OneToOne @JoinColumn(name="user_id",unique=true) private User user; @ManyToOne(optional=false) @JoinColumn(name="school_id") private School school; @Column(nullable=false,unique=true,length=30) private String admissionNumber; @Column(nullable=false,length=80) private String firstName; private String middleName; @Column(nullable=false,length=80) private String lastName; @Enumerated(EnumType.STRING) @Column(nullable=false) private Gender gender; @Column(nullable=false) private LocalDate dateOfBirth; private LocalDate admissionDate; private String birthCertificateNumber; private String nationalId; private String county; private String photoPath; private boolean active=true; }

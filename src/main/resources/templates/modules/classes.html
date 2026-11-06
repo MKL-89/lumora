@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Classes')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('classes')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Classes')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Academics</p>
+                    <h1>Classes and streams</h1>
+                    <p class="muted" th:text="${#lists.size(classes)} + ' classes · '
+                                              + ${#lists.size(streams)} + ' streams'">0</p>
+                </div>
+            </div>
+
+            <section class="grid g-2">
+                <div class="panel">
+                    <div class="panel-head"><h2>Classes</h2></div>
+
+                    <div th:if="${#lists.isEmpty(classes)}" class="empty">
+                        <span class="big">⌗</span>No classes configured.
+                    </div>
+
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(classes)}">
+                        <table class="data">
+                            <thead><tr><th>Class</th><th class="num">Level</th></tr></thead>
+                            <tbody>
+                            <tr th:each="c : ${classes}">
+                                <td th:text="${c.name}">Form 1</td>
+                                <td class="num" th:text="${c.level}">1</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><h2>Streams</h2></div>
+
+                    <div th:if="${#lists.isEmpty(streams)}" class="empty">
+                        <span class="big">⌗</span>No streams configured.
+                    </div>
+
+                    <div class="table-wrap" th:unless="${#lists.isEmpty(streams)}">
+                        <table class="data">
+                            <thead><tr><th>Class</th><th>Stream</th><th class="num">Capacity</th></tr></thead>
+                            <tbody>
+                            <tr th:each="s : ${streams}">
+                                <td th:text="${s.schoolClass.name}">Form 1</td>
+                                <td th:text="${s.name}">North</td>
+                                <td class="num" th:text="${s.capacity} ?: '—'">45</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

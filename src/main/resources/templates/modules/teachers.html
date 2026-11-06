@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Teachers')}"></head>
+<body>
+
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('teachers')}"></aside>
+
+    <div class="content">
+        <nav th:replace="~{fragments/layout :: topbar('Teachers')}"></nav>
+
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="page-head">
+                <div>
+                    <p class="eyebrow">Administration</p>
+                    <h1>Teaching staff</h1>
+                    <p class="muted" data-filter-count="teacherTable"
+                       th:text="${#lists.size(items)} + ' records'">0 records</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Staff register</h2>
+                    <input type="search" data-filter="teacherTable"
+                           placeholder="Filter by name or employee number…" style="max-width:300px">
+                </div>
+
+                <div th:if="${#lists.isEmpty(items)}" class="empty">
+                    <span class="big">◐</span>No teachers on record.
+                </div>
+
+                <div class="table-wrap" th:unless="${#lists.isEmpty(items)}">
+                    <table class="data" id="teacherTable">
+                        <thead>
+                        <tr><th>Employee no.</th><th>Name</th><th>Gender</th><th>Phone</th>
+                            <th>TSC number</th><th>Employed</th><th>Login</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="t : ${items}">
+                            <td class="mono" th:text="${t.employeeNumber}">T/001</td>
+                            <td th:text="${t.firstName} + ' ' + ${t.lastName}">Name</td>
+                            <td th:text="${t.gender} ?: '—'">—</td>
+                            <td class="mono" th:text="${t.phone} ?: '—'">—</td>
+                            <td class="mono faint" th:text="${t.tscNumber} ?: '—'">—</td>
+                            <td th:text="${t.employmentDate != null}
+                                         ? ${#temporals.format(t.employmentDate, 'MMM yyyy')} : '—'">—</td>
+                            <td class="mono" th:text="${t.user.username}">user</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>

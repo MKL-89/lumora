@@ -1,0 +1,4 @@
+package com.lumora.sms.entity;
+import com.lumora.sms.enums.InvoiceStatus; import jakarta.persistence.*; import lombok.*; import java.math.BigDecimal; import java.time.LocalDate;
+@Entity @Table(name="student_invoices") @Getter @Setter @NoArgsConstructor
+public class StudentInvoice extends BaseEntity { @ManyToOne(optional=false) @JoinColumn(name="student_id") private Student student; @ManyToOne(optional=false) @JoinColumn(name="term_id") private Term term; @Column(nullable=false,unique=true,length=40) private String invoiceNumber; @Column(nullable=false,precision=15,scale=2) private BigDecimal totalAmount; @Column(nullable=false,precision=15,scale=2) private BigDecimal balanceAmount; @Enumerated(EnumType.STRING) @Column(nullable=false,length=20) private InvoiceStatus status; @Column(nullable=false) private LocalDate dueDate; }

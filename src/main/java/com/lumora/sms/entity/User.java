@@ -1,0 +1,4 @@
+package com.lumora.sms.entity;
+import jakarta.persistence.*; import lombok.*; import java.time.LocalDateTime; import java.util.*;
+@Entity @Table(name="users") @Getter @Setter @NoArgsConstructor
+public class User extends BaseEntity { @Column(nullable=false,unique=true,length=80) private String username; @Column(nullable=false,unique=true,length=150) private String email; @Column(nullable=false,length=255) private String passwordHash; @Column(nullable=false) private boolean enabled=true; @Column(nullable=false) private boolean locked=false; @Column(nullable=false) private int failedLoginAttempts=0; private LocalDateTime lastFailedLoginAt; private LocalDateTime lockoutUntil; private LocalDateTime passwordChangedAt; @ManyToMany(fetch=FetchType.EAGER) @JoinTable(name="user_roles",joinColumns=@JoinColumn(name="user_id"),inverseJoinColumns=@JoinColumn(name="role_id")) private Set<Role> roles=new HashSet<>(); }
