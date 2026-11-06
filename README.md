@@ -1,7 +1,29 @@
 # Lumora School Management System
 
-A school ERP for Kenyan secondary schools, built with Java 17, Spring Boot 3.5,
-Spring Security 6, Spring Data JPA, Thymeleaf, Flyway and MySQL/MariaDB.
+**Lumora is a web-based school management system built for Kenyan secondary schools.**
+It brings admissions, daily attendance, examinations, fees and the library into one
+place, with eleven role-specific dashboards so everyone — from the Principal and
+Bursar to Teachers, Students and Parents — sees exactly what their job needs and
+nothing more.
+
+Built with Java 17, Spring Boot 3.5, Spring Security 6, Spring Data JPA, Thymeleaf,
+Flyway and MySQL/MariaDB, with a standalone mode that needs nothing but Java.
+
+## Features
+
+- **Admissions and records** — enrol learners, place them in classes and streams, link guardians.
+- **Attendance** — a daily register per stream, with attendance rates per learner.
+- **Examinations** — teachers enter marks only for subjects they teach; grades and points
+  come automatically from the KCSE 12-point scale; published results are locked.
+- **Finance** — fee structures per class, bulk invoicing, receipting and M-Pesa
+  reconciliation in KES; a payment can never exceed the balance owed.
+- **Library** — catalogue, copy-level issue and return, overdue tracking.
+- **Communication** — school-wide announcements and personal notifications.
+- **Student and parent portals** — only their own (or their children's) results,
+  attendance, fee balance and library loans.
+- **School branding** — administrators upload the school's own logo and photos.
+- **Security** — role-based access with record-level ownership checks, account lockout,
+  CSRF protection, strict Content-Security-Policy, BCrypt passwords and a full audit trail.
 
 ---
 
@@ -10,6 +32,25 @@ Spring Security 6, Spring Data JPA, Thymeleaf, Flyway and MySQL/MariaDB.
 There are two ways to run Lumora. **Option A needs only Java** and is the right
 choice for a presentation or any machine that does not already have MySQL. Option B
 uses a real MySQL/MariaDB server.
+
+### Quick start from a fresh clone
+
+You need Java 17 or newer. The first run builds the app (it needs internet once to
+download dependencies), then starts it:
+
+```bash
+git clone <this repository's URL>
+cd <the cloned folder>
+START-LUMORA.bat
+```
+
+On Mac/Linux use `./mvnw -DskipTests package` and then
+`java -jar target/lumora-school-management-system-0.0.1-SNAPSHOT.jar --spring.profiles.active=standalone,demo`.
+Open **http://localhost:8081** and sign in with one of the demo accounts below.
+
+To make a portable copy for another PC, build once and copy the jar into `dist`:
+`./mvnw package` then copy `target/lumora-school-management-system-0.0.1-SNAPSHOT.jar`
+to `dist/lumora.jar`. The jar is not stored in git because it is rebuilt from source.
 
 ### Option A — standalone, needs only Java (recommended)
 
@@ -198,8 +239,8 @@ service layer, which owns the transaction boundary and the business rules.
 mvn test
 ```
 
-29 tests covering the grading scale, the payment balance rules, library
-circulation, and chart geometry.
+37 tests covering the grading scale, the payment balance rules, library
+circulation, chart geometry, and school photo uploads.
 
 ---
 
