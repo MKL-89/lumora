@@ -32,6 +32,10 @@
                 <span>ⓘ</span>
                 <span>These results are published, so the marks are locked. This is a read-only view.</span>
             </div>
+            <div class="alert info" th:if="${viewOnlyRole and not examination.published}">
+                <span>ⓘ</span>
+                <span>You can view this mark sheet. Marks are entered by the subject teachers and the principal.</span>
+            </div>
 
             <div class="panel" th:if="${#lists.isEmpty(subjects)}">
                 <div class="empty">
@@ -75,18 +79,21 @@
                       th:action="@{/examinations/{id}/marks(id=${examination.id})}" method="post">
                     <input type="hidden" name="examSubjectId" th:value="${examSubject.id}">
 
-                    <div class="panel-body" th:unless="${examination.published}"
+                    <div class="panel-body" th:unless="${readOnly}"
                          style="border-bottom:1px solid var(--line)">
                         <div class="field" style="max-width:340px;margin-bottom:0">
                             <label for="teacherId">Entering as</label>
                             <select id="teacherId" name="teacherId" required>
-                                <option value="">Select the subject teacher…</option>
+                                <option value="" th:if="${ownTeacherId == null}">Select the subject teacher…</option>
                                 <option th:each="t : ${teachers}" th:value="${t.id}"
+                                        th:selected="${t.id == ownTeacherId}"
                                         th:text="${t.firstName} + ' ' + ${t.lastName}
                                                  + ' (' + ${t.employeeNumber} + ')'">Teacher</option>
                             </select>
-                            <div class="hint">A teacher may only enter marks for subjects assigned to them
-                                              in this stream and term.</div>
+                            <div class="hint" th:if="${ownTeacherId != null}">Marks are recorded under your
+                                              name. You can only enter marks for subjects you teach in this stream.</div>
+                            <div class="hint" th:unless="${ownTeacherId != null}">A teacher may only enter marks
+                                              for subjects assigned to them in this stream and term.</div>
                         </div>
                     </div>
 
@@ -106,7 +113,7 @@
                                            th:max="${examSubject.maximumMark}"
                                            th:name="'mark_' + ${row.studentId}"
                                            th:value="${row.marks}"
-                                           th:disabled="${examination.published}"
+                                           th:disabled="${readOnly}"
                                            style="text-align:right">
                                 </td>
                                 <td><span class="grade" th:classappend="${@chartRenderer.gradeClass(row.grade)}"
@@ -117,7 +124,7 @@
                         </table>
                     </div>
 
-                    <div class="panel-body" th:unless="${examination.published}"
+                    <div class="panel-body" th:unless="${readOnly}"
                          style="border-top:1px solid var(--line)">
                         <div class="form-actions">
                             <button class="btn" type="submit">Save marks</button>

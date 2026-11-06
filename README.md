@@ -208,13 +208,14 @@ service layer, which owns the transaction boundary and the business rules.
 
 | Area | Rule |
 |---|---|
-| Admissions | Admission numbers are unique; the stream and academic year must belong to the learner's school; a learner cannot be admitted before they were born; the learner record and class placement are written in one transaction |
-| Attendance | One record per learner, per stream, per day; the register cannot be taken for a future date; a learner outside the stream cannot appear on its register; re-saving corrects rather than duplicates |
-| Examinations | A teacher may only enter marks for subjects assigned to them in that stream and term; marks cannot exceed the paper maximum or be negative; grades and points are assigned automatically from the grading scale, computed as a percentage of the paper maximum; published results are immutable |
+| Admissions | Only the principal and administrators can admit or deactivate a learner; admission numbers are unique; the stream and academic year must belong to the learner's school; a learner cannot be admitted before they were born; the learner record and class placement are written in one transaction |
+| Attendance | A teacher always records a register as themselves; one record per learner, per stream, per day; the register cannot be taken for a future date; a learner outside the stream cannot appear on its register; re-saving corrects rather than duplicates |
+| Examinations | A teacher may only enter marks for subjects assigned to them in that stream and term, and is always recorded as themselves (never a colleague); only the principal publishes; marks cannot exceed the paper maximum or be negative; grades and points are assigned automatically from the grading scale, computed as a percentage of the paper maximum; published results are immutable |
 | Finance | Receipt numbers are unique; a payment can never exceed the invoice balance; a voided invoice cannot receive payments; an invoice is `PAID` only at a zero balance; the bulk invoice run skips anyone already billed, so it is safe to repeat |
 | M-Pesa | Transaction codes are unique; the M-Pesa amount must equal its payment amount |
 | Library | Only an available copy can be issued; a loan cannot fall due before it is issued; copy status and loan status change together in one transaction |
 | Ownership | A learner can only open their own record; a guardian only the children linked to them — checked against the authenticated identity, never a request parameter |
+| Results | Looked up by admission number. Teachers, the principal, the deputy and administrators may see any learner (the deputy and administrators read-only); a learner only themselves and a guardian only their own children, published results only |
 
 ---
 
@@ -239,8 +240,8 @@ service layer, which owns the transaction boundary and the business rules.
 mvn test
 ```
 
-37 tests covering the grading scale, the payment balance rules, library
-circulation, chart geometry, and school photo uploads.
+42 tests covering the grading scale, the payment balance rules, library
+circulation, chart geometry, and school photo uploads, results summaries, and teacher identity on mark entry.
 
 ---
 

@@ -28,4 +28,11 @@ public interface UserService {
     List<Parent> parents();
 
     List<RoleUsage> roleUsage();
+
+    /**
+     * The name to greet a signed-in person by: the teacher's, learner's or
+     * guardian's real name when the account belongs to one, otherwise a tidied
+     * form of the username ("deputy" becomes "Deputy").
+     */
+    String displayName(String username);
 }

@@ -80,10 +80,12 @@ public class StudentController {
         var profile = students.profile(id);
         model.addAttribute("profile", profile);
 
-        // Results are for teachers and the principal (every mark, drafts included)
+        // Results are for teachers, the principal, the deputy and administrators
+        // (every mark, drafts included)
         // and for the learner and their guardians (published examinations only).
         // Every other role sees the record without results.
-        if (hasAny(authentication, "ROLE_PRINCIPAL", "ROLE_TEACHER", "ROLE_CLASS_TEACHER")) {
+        if (hasAny(authentication, "ROLE_PRINCIPAL", "ROLE_DEPUTY_PRINCIPAL", "ROLE_ADMINISTRATOR",
+                "ROLE_TEACHER", "ROLE_CLASS_TEACHER")) {
             model.addAttribute("results", profile.results());
             model.addAttribute("resultsPublishedOnly", false);
         } else if (hasAny(authentication, "ROLE_STUDENT", "ROLE_PARENT")) {

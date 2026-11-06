@@ -21,6 +21,9 @@ public interface AcademicService {
 
     List<Teacher> teachers();
 
+    /** The teacher record behind a signed-in staff account, if it has one. */
+    java.util.Optional<Teacher> teacherForUser(String username);
+
     List<Term> terms();
 
     List<AcademicYear> academicYears();

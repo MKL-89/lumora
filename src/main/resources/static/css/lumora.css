@@ -697,3 +697,4 @@ select { cursor: pointer; }
 .results-lookup { display: flex; gap: .75rem; align-items: flex-start; flex-wrap: wrap; }
 .results-lookup .btn { margin-top: 1.55rem; }
 @media (max-width: 640px) { .results-lookup .btn { margin-top: 0; width: 100%; justify-content: center; } }
+.search svg.ico { display: block; pointer-events: none; }

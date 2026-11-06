@@ -19,21 +19,24 @@ public class AttendanceController {
 
     private final AttendanceService attendance;
     private final AcademicService academics;
+    private final com.lumora.sms.security.ActingTeacher actingTeacher;
 
     @GetMapping
     public String register(@RequestParam(required = false) Long streamId,
                            @RequestParam(required = false) Long teacherId,
                            @RequestParam(required = false)
                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                           org.springframework.security.core.Authentication authentication,
                            Model model) {
         LocalDate day = date == null ? LocalDate.now() : date;
 
         model.addAttribute("module", "Attendance");
         model.addAttribute("streams", academics.streams());
-        model.addAttribute("teachers", academics.teachers());
+        model.addAttribute("teachers", actingTeacher.choices(authentication));
         model.addAttribute("statuses", AttendanceStatus.values());
         model.addAttribute("selectedStream", streamId);
-        model.addAttribute("selectedTeacher", teacherId);
+        // A teacher records registers as themselves, never as a colleague.
+        model.addAttribute("selectedTeacher", actingTeacher.resolve(authentication, teacherId));
         model.addAttribute("date", day);
         model.addAttribute("today", LocalDate.now());
 
@@ -49,10 +52,16 @@ public class AttendanceController {
      */
     @PostMapping
     public String save(@RequestParam Long streamId,
-                       @RequestParam Long teacherId,
+                       @RequestParam(required = false) Long teacherId,
                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                        @RequestParam Map<String, String> allParams,
+                       org.springframework.security.core.Authentication authentication,
                        RedirectAttributes flash) {
+        Long recordedBy = actingTeacher.resolve(authentication, teacherId);
+        if (recordedBy == null) {
+            flash.addFlashAttribute("problem", "Choose who is recording this register.");
+            return "redirect:/attendance?streamId=" + streamId + "&date=" + date;
+        }
         Map<Long, AttendanceStatus> marks = new LinkedHashMap<>();
         for (Map.Entry<String, String> entry : allParams.entrySet()) {
             if (!entry.getKey().startsWith("status_") || entry.getValue() == null || entry.getValue().isBlank()) {
@@ -62,8 +71,8 @@ public class AttendanceController {
             marks.put(studentId, AttendanceStatus.valueOf(entry.getValue()));
         }
 
-        int saved = attendance.saveRegister(streamId, teacherId, date, marks);
+        int saved = attendance.saveRegister(streamId, recordedBy, date, marks);
         flash.addFlashAttribute("message", "Register saved for " + saved + " learner(s).");
-        return "redirect:/attendance?streamId=" + streamId + "&teacherId=" + teacherId + "&date=" + date;
+        return "redirect:/attendance?streamId=" + streamId + "&teacherId=" + recordedBy + "&date=" + date;
     }
 }

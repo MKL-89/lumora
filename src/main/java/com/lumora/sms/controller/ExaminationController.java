@@ -28,6 +28,7 @@ public class ExaminationController {
     private final AcademicService academics;
     private final StudentService students;
     private final DashboardAccessService access;
+    private final com.lumora.sms.security.ActingTeacher actingTeacher;
 
     @GetMapping("/examinations")
     public String examinations(Model model) {
@@ -40,14 +41,23 @@ public class ExaminationController {
     @GetMapping("/examinations/{examinationId}")
     public String marksheet(@PathVariable Long examinationId,
                             @RequestParam(required = false) Long examSubjectId,
+                            Authentication authentication,
                             Model model) {
         var examination = examinations.get(examinationId);
         var subjects = examinations.subjectsOf(examinationId);
 
+        // Deputy principals and administrators may read mark sheets but not enter
+        // marks; published sheets are locked for everyone.
+        boolean entersMarks = has(authentication, "ROLE_PRINCIPAL", "ROLE_TEACHER", "ROLE_CLASS_TEACHER");
+        model.addAttribute("readOnly", examination.isPublished() || !entersMarks);
+        model.addAttribute("viewOnlyRole", !entersMarks);
+
         model.addAttribute("module", "Mark entry");
         model.addAttribute("examination", examination);
         model.addAttribute("subjects", subjects);
-        model.addAttribute("teachers", academics.teachers());
+        model.addAttribute("teachers", actingTeacher.choices(authentication));
+        model.addAttribute("ownTeacherId",
+                actingTeacher.restrictedTo(authentication).map(t -> t.getId()).orElse(null));
 
         Long selected = examSubjectId != null ? examSubjectId
                 : subjects.isEmpty() ? null : subjects.get(0).getId();
@@ -65,9 +75,16 @@ public class ExaminationController {
     @PostMapping("/examinations/{examinationId}/marks")
     public String saveMarks(@PathVariable Long examinationId,
                             @RequestParam Long examSubjectId,
-                            @RequestParam Long teacherId,
+                            @RequestParam(required = false) Long teacherId,
                             @RequestParam Map<String, String> allParams,
+                            Authentication authentication,
                             RedirectAttributes flash) {
+        // A teacher is always recorded as themselves, never as a colleague.
+        Long recordedBy = actingTeacher.resolve(authentication, teacherId);
+        if (recordedBy == null) {
+            flash.addFlashAttribute("problem", "Choose the subject teacher the marks are being entered for.");
+            return "redirect:/examinations/" + examinationId + "?examSubjectId=" + examSubjectId;
+        }
         int saved = 0;
         for (Map.Entry<String, String> entry : allParams.entrySet()) {
             if (!entry.getKey().startsWith("mark_") || entry.getValue() == null || entry.getValue().isBlank()) {
@@ -75,7 +92,7 @@ public class ExaminationController {
             }
             Long studentId = Long.valueOf(entry.getKey().substring("mark_".length()));
             examinations.enterMark(new MarkEntryRequest(
-                    teacherId, examSubjectId, studentId, new BigDecimal(entry.getValue().trim()), null));
+                    recordedBy, examSubjectId, studentId, new BigDecimal(entry.getValue().trim()), null));
             saved++;
         }
         flash.addFlashAttribute("message", saved + " mark(s) recorded and graded.");
@@ -145,7 +162,8 @@ public class ExaminationController {
     }
 
     private boolean isStaff(Authentication authentication) {
-        return has(authentication, "ROLE_PRINCIPAL", "ROLE_TEACHER", "ROLE_CLASS_TEACHER");
+        return has(authentication, "ROLE_PRINCIPAL", "ROLE_DEPUTY_PRINCIPAL", "ROLE_ADMINISTRATOR",
+                "ROLE_TEACHER", "ROLE_CLASS_TEACHER");
     }
 
     private static boolean has(Authentication authentication, String... roles) {

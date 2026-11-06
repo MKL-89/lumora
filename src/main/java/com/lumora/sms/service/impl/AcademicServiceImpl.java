@@ -69,6 +69,11 @@ public class AcademicServiceImpl implements AcademicService {
     }
 
     @Override
+    public java.util.Optional<Teacher> teacherForUser(String username) {
+        return username == null ? java.util.Optional.empty() : teachers.findByUserUsername(username);
+    }
+
+    @Override
     public List<Term> terms() {
         return terms.findAllByOrderByAcademicYearNameAscTermNumberAsc();
     }

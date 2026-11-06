@@ -148,12 +148,16 @@ public class SecurityConfig {
                 // they belong to the people who enter marks (teachers) and the
                 // principal, who alone publishes them.
                 .requestMatchers(HttpMethod.POST, "/examinations/*/publish").hasRole("PRINCIPAL")
-                .requestMatchers("/examinations/**").hasAnyRole("PRINCIPAL", "TEACHER", "CLASS_TEACHER")
+                .requestMatchers(HttpMethod.POST, "/examinations/**").hasAnyRole("PRINCIPAL", "TEACHER", "CLASS_TEACHER")
+                // The deputy and administrators may read mark sheets, not enter marks.
+                .requestMatchers("/examinations/**")
+                    .hasAnyRole("PRINCIPAL", "DEPUTY_PRINCIPAL", "ADMINISTRATOR", "TEACHER", "CLASS_TEACHER")
 
                 // Results lookup by admission number. Learners and guardians may only
                 // open their own records; ExaminationController checks ownership.
                 .requestMatchers("/results/**")
-                    .hasAnyRole("PRINCIPAL", "TEACHER", "CLASS_TEACHER", "STUDENT", "PARENT")
+                    .hasAnyRole("PRINCIPAL", "DEPUTY_PRINCIPAL", "ADMINISTRATOR", "TEACHER", "CLASS_TEACHER",
+                                "STUDENT", "PARENT")
 
                 // Registers are entered by teaching staff and leadership.
                 .requestMatchers(HttpMethod.POST, "/attendance/**")

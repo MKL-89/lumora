@@ -42,10 +42,10 @@
             <a th:href="@{/attendance}" th:classappend="${active == 'attendance'} ? 'active'">
                 <span class="ico">▤</span> Attendance</a>
             <a th:href="@{/examinations}" th:classappend="${active == 'examinations'} ? 'active'"
-               sec:authorize="hasAnyRole('PRINCIPAL','TEACHER','CLASS_TEACHER')">
+               sec:authorize="hasAnyRole('PRINCIPAL','DEPUTY_PRINCIPAL','ADMINISTRATOR','TEACHER','CLASS_TEACHER')">
                 <span class="ico">✎</span> Examinations</a>
             <a th:href="@{/results}" th:classappend="${active == 'results'} ? 'active'"
-               sec:authorize="hasAnyRole('PRINCIPAL','TEACHER','CLASS_TEACHER')">
+               sec:authorize="hasAnyRole('PRINCIPAL','DEPUTY_PRINCIPAL','ADMINISTRATOR','TEACHER','CLASS_TEACHER')">
                 <span class="ico">◔</span> Results</a>
             <a th:href="@{/subjects}" th:classappend="${active == 'subjects'} ? 'active'">
                 <span class="ico">≡</span> Subjects</a>
@@ -100,8 +100,10 @@
 <nav class="topbar" th:fragment="topbar(pageTitle)">
     <button class="icon-btn sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle navigation">☰</button>
 
-    <div class="search">
-        <span class="ico">⌕</span>
+    <!-- Learner search: only for roles that may open the learner list. -->
+    <div class="search" sec:authorize="hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','PRINCIPAL','DEPUTY_PRINCIPAL','REGISTRAR','TEACHER','CLASS_TEACHER','BURSAR')">
+        <svg class="ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <form th:action="@{/students}" method="get">
             <input type="search" name="q" placeholder="Search learners by name or admission number">
         </form>
@@ -111,15 +113,17 @@
         <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle theme">☽</button>
 
         <div class="who">
-            <span class="avatar" th:text="${#strings.toUpperCase(#strings.substring(#authentication.name, 0, 2))}">AB</span>
+            <span class="avatar" th:text="${@people.initials(#authentication)}">AB</span>
             <span>
-                <span class="name" th:text="${#authentication.name}">user</span>
-                <span class="role" sec:authentication="principal.authorities">roles</span>
+                <span class="name" th:text="${@people.name(#authentication)}">user</span>
+                <span class="role" th:text="${@people.role(#authentication)}">Role</span>
             </span>
         </div>
 
         <form th:action="@{/logout}" method="post">
-            <button class="icon-btn" type="submit" title="Sign out" aria-label="Sign out">⏻</button>
+            <button class="icon-btn" type="submit" title="Sign out" aria-label="Sign out"><svg
+                    viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></button>
         </form>
     </div>
 </nav>

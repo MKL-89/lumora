@@ -57,7 +57,7 @@
                             </td>
                             <td class="right nowrap">
                                 <a class="btn ghost sm" th:href="@{/examinations/{id}(id=${e.id})}">
-                                    <span th:text="${e.published} ? 'View marks' : 'Enter marks'">Enter marks</span></a>
+                                    <span th:text="${e.published or not #authorization.expression('hasAnyRole(''PRINCIPAL'',''TEACHER'',''CLASS_TEACHER'')')} ? 'View marks' : 'Enter marks'">Enter marks</span></a>
 
                                 <form th:unless="${e.published}" style="display:inline"
                                       th:action="@{/examinations/{id}/publish(id=${e.id})}" method="post"

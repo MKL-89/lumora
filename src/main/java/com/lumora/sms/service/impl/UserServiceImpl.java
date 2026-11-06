@@ -26,6 +26,27 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roles;
     private final ParentRepository parents;
     private final PasswordEncoder passwordEncoder;
+    private final TeacherRepository teachers;
+    private final StudentRepository students;
+
+    @Override
+    public String displayName(String username) {
+        if (username == null || username.isBlank()) {
+            return "";
+        }
+        return teachers.findByUserUsername(username).map(t -> t.getFirstName() + " " + t.getLastName())
+                .or(() -> students.findByUserUsername(username).map(s -> s.getFirstName() + " " + s.getLastName()))
+                .or(() -> parents.findByUserUsername(username).map(p -> p.getFirstName() + " " + p.getLastName()))
+                .orElseGet(() -> tidy(username));
+    }
+
+    /** "grace.wanjiru" becomes "Grace Wanjiru"; "superadmin" becomes "Superadmin". */
+    static String tidy(String username) {
+        return java.util.Arrays.stream(username.split("[._\\-]+"))
+                .filter(part -> !part.isEmpty())
+                .map(part -> Character.toUpperCase(part.charAt(0)) + part.substring(1))
+                .collect(Collectors.joining(" "));
+    }
 
     @Override
     public User get(Long id) {

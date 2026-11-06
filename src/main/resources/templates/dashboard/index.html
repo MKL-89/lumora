@@ -17,7 +17,7 @@
                 <img th:replace="~{fragments/layout :: heroImg('banner')}">
                 <div>
                     <p class="eyebrow" th:text="${dashboardRole}">ROLE</p>
-                    <h1>Welcome back, <span th:text="${username}">user</span></h1>
+                    <h1>Welcome back, <span th:text="${@people.name(#authentication)}">user</span></h1>
                     <p class="muted">Lumora Secondary School · where the school stands today.</p>
                 </div>
                 <div class="row">
@@ -72,7 +72,7 @@
                             <p class="sub">Across all published examinations</p>
                         </div>
                         <a class="btn ghost sm" th:href="@{/results}"
-                           sec:authorize="hasAnyRole('PRINCIPAL','TEACHER','CLASS_TEACHER')">Look up results</a>
+                           sec:authorize="hasAnyRole('PRINCIPAL','DEPUTY_PRINCIPAL','ADMINISTRATOR','TEACHER','CLASS_TEACHER')">Look up results</a>
                     </div>
                     <div class="panel-body tight">
                         <div th:replace="~{fragments/charts :: bars(${performanceChart}, '')}"></div>
